@@ -75,15 +75,34 @@ const Store = (() => {
 
   // ── USUARIOS ──────────────────────────────────────
   const getUsuarios = () => get(K.USUARIOS) || [];
+
   const validarCredenciales = (usuario, password) =>
     getUsuarios().find(u => u.usuario === usuario && u.password === password) || null;
+
+  // Busca si un usuario ya existe por su nombre de usuario
+  const existeUsuario = usuario =>
+    getUsuarios().some(u => u.usuario.toLowerCase() === usuario.toLowerCase());
+
+  // Guarda un nuevo usuario en la lista
+  const registrarUsuario = (nombre, usuario, password, rol = 'kiosco') => {
+    const usuarios = getUsuarios();
+    const nuevoUsuario = {
+      id: Date.now().toString(),
+      nombre,
+      usuario,
+      password,
+      rol
+    };
+    usuarios.push(nuevoUsuario);
+    set(K.USUARIOS, usuarios);
+    return nuevoUsuario;
+  };
 
   // ── SEED ──────────────────────────────────────────
   const seedInicial = () => {
     if (!get(K.USUARIOS)) {
       set(K.USUARIOS, [
         { id: '1', nombre: 'Administrador', usuario: 'admin', password: 'admin123', rol: 'admin' },
-        { id: '2', nombre: 'Kiosco 1',      usuario: 'kiosco', password: 'kiosco123', rol: 'kiosco' }
       ]);
     }
     if (!get(K.MENU)) {
@@ -109,7 +128,7 @@ const Store = (() => {
     agregarProducto, actualizarProducto, eliminarProducto, actualizarStock,
     getPedidos, savePedido, actualizarEstadoPedido,
     getConfig, resetTurnos,
-    getUsuarios, validarCredenciales,
+    getUsuarios, validarCredenciales, existeUsuario, registrarUsuario,
     seedInicial
   };
 })();

@@ -9,6 +9,18 @@ const Auth = (() => {
     return user;
   };
 
+  const registrar = (nombre, usuario, password, rol = 'kiosco') => {
+    // Si ya existe el usuario, no permitimos registrarlo
+    if (Store.existeUsuario(usuario)) {
+      return { ok: false, msg: 'El usuario ya existe, intente iniciar sesión.' };
+    }
+
+    const nuevoUser = Store.registrarUsuario(nombre, usuario, password, rol);
+    // Inicia sesión automáticamente tras el registro exitoso
+    sessionStorage.setItem(KEY, JSON.stringify(nuevoUser));
+    return { ok: true, user: nuevoUser };
+  };
+
   const logout = () => {
     sessionStorage.removeItem(KEY);
     window.location.href = 'index.html';
@@ -24,7 +36,6 @@ const Auth = (() => {
     return s ? s.nombre : '';
   };
 
-  // Redirige si el rol no coincide
   const proteger = rolRequerido => {
     const s = getSesion();
     if (!s || s.rol !== rolRequerido) {
@@ -32,5 +43,5 @@ const Auth = (() => {
     }
   };
 
-  return { login, logout, getSesion, getNombre, proteger };
+  return { login, registrar, logout, getSesion, getNombre, proteger };
 })();
