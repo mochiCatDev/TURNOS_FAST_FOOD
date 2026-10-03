@@ -1,107 +1,111 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FastTurno — Pantalla</title>
+  <title>FastTurno - Pantalla</title>
+  <link rel="icon" type="image/png" href="assets/img/icon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
+
 <body>
-<div class="display-page">
+  <div class="display-page">
 
-  <!-- HEADER -->
-  <header class="display-header">
-    <div class="display-brand">
-      <i class="fa-solid fa-burger"></i> FastTurno
-    </div>
-    <span style="font-size:.75rem;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase">Pantalla de Turnos</span>
-    <div class="display-clock" id="reloj">00:00:00</div>
-  </header>
-
-  <!-- BODY -->
-  <div class="display-body">
-
-    <!-- TURNO ACTIVO -->
-    <div class="display-col">
-      <div class="display-col-label">
-        <i class="fa-solid fa-volume-high"></i> Turno en curso
+    <!-- HEADER -->
+    <header class="display-header">
+      <div class="display-brand">
+        <i class="fa-solid fa-burger"></i> FastTurno
       </div>
-      <div class="active-turn" id="active-turn">
-        <div class="at-idle">
-          <i class="fa-regular fa-clock"></i>
-          <span>Esperando pedidos...</span>
+      <span style="font-size:.75rem;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase">Pantalla de
+        Turnos</span>
+      <div class="display-clock" id="reloj">00:00:00</div>
+    </header>
+
+    <!-- BODY -->
+    <div class="display-body">
+
+      <!-- TURNO ACTIVO -->
+      <div class="display-col">
+        <div class="display-col-label">
+          <i class="fa-solid fa-volume-high"></i> Turno en curso
+        </div>
+        <div class="active-turn" id="active-turn">
+          <div class="at-idle">
+            <i class="fa-regular fa-clock"></i>
+            <span>Esperando pedidos...</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- COLA -->
-    <div class="display-col">
-      <div class="display-col-label">
-        <i class="fa-solid fa-list-ul"></i> Cola de pedidos
-      </div>
-      <div class="queue-list" id="queue-list">
-        <div class="queue-empty">
-          <i class="fa-regular fa-circle-check"></i>
-          <span>Sin pedidos en cola</span>
+      <!-- COLA -->
+      <div class="display-col">
+        <div class="display-col-label">
+          <i class="fa-solid fa-list-ul"></i> Cola de pedidos
+        </div>
+        <div class="queue-list" id="queue-list">
+          <div class="queue-empty">
+            <i class="fa-regular fa-circle-check"></i>
+            <span>Sin pedidos en cola</span>
+          </div>
         </div>
       </div>
-    </div>
 
+    </div>
   </div>
-</div>
 
-<script src="js/store.js"></script>
-<script src="js/channel.js"></script>
-<script>
-// ─── RELOJ ────────────────────────────────────────────
-setInterval(() => {
-  document.getElementById('reloj').textContent =
-    new Date().toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
-}, 1000);
+  <script src="js/store.js"></script>
+  <script src="js/channel.js"></script>
+  <script>
+    // ─── RELOJ ────────────────────────────────────────────
+    setInterval(() => {
+      document.getElementById('reloj').textContent =
+        new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }, 1000);
 
-// ─── AUDIO ───────────────────────────────────────────
-function beep() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [523.25, 659.25, 783.99].forEach((freq, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value = freq; o.type = 'sine';
-      const t = ctx.currentTime + i * .18;
-      g.gain.setValueAtTime(.32, t);
-      g.gain.exponentialRampToValueAtTime(.001, t + .38);
-      o.start(t); o.stop(t + .38);
-    });
-  } catch(e) {}
-}
+    // ─── AUDIO ───────────────────────────────────────────
+    function beep() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        [523.25, 659.25, 783.99].forEach((freq, i) => {
+          const o = ctx.createOscillator(), g = ctx.createGain();
+          o.connect(g); g.connect(ctx.destination);
+          o.frequency.value = freq; o.type = 'sine';
+          const t = ctx.currentTime + i * .18;
+          g.gain.setValueAtTime(.32, t);
+          g.gain.exponentialRampToValueAtTime(.001, t + .38);
+          o.start(t); o.stop(t + .38);
+        });
+      } catch (e) { }
+    }
 
-// ─── TURNO ACTIVO ─────────────────────────────────────
-function mostrarTurno(turno) {
-  document.getElementById('active-turn').innerHTML = `
+    // ─── TURNO ACTIVO ─────────────────────────────────────
+    function mostrarTurno(turno) {
+      document.getElementById('active-turn').innerHTML = `
     <div class="at-icon"><i class="fa-solid fa-volume-high"></i></div>
     <div class="at-num anim" id="at-num">${turno}</div>
     <div class="at-msg">Pase a retirar por caja</div>`;
-  beep();
-  setTimeout(() => document.getElementById('at-num')?.classList.remove('anim'), 3000);
-}
+      beep();
+      setTimeout(() => document.getElementById('at-num')?.classList.remove('anim'), 3000);
+    }
 
-function clearTurno() {
-  document.getElementById('active-turn').innerHTML =
-    '<div class="at-idle"><i class="fa-regular fa-clock"></i><span>Esperando pedidos...</span></div>';
-}
+    function clearTurno() {
+      document.getElementById('active-turn').innerHTML =
+        '<div class="at-idle"><i class="fa-regular fa-clock"></i><span>Esperando pedidos...</span></div>';
+    }
 
-// ─── COLA ─────────────────────────────────────────────
-function renderCola() {
-  const pedidos = Store.getPedidos().filter(p => ['pendiente','en_preparacion','llamado'].includes(p.estado));
-  const el = document.getElementById('queue-list');
-  el.innerHTML = pedidos.length === 0
-    ? '<div class="queue-empty"><i class="fa-regular fa-circle-check"></i><span>Sin pedidos en cola</span></div>'
-    : pedidos.map(p => {
-        const cls = p.estado === 'llamado' ? 'q-ready' : p.estado === 'en_preparacion' ? 'q-prep' : '';
-        const badgeCls = p.estado === 'llamado' ? 'qb-ready' : p.estado === 'en_preparacion' ? 'qb-prep' : 'qb-wait';
-        const badgeTxt = p.estado === 'llamado' ? 'Llamado' : p.estado === 'en_preparacion' ? 'En prep.' : 'Esperando';
-        return `
+    // ─── COLA ─────────────────────────────────────────────
+    function renderCola() {
+      const pedidos = Store.getPedidos().filter(p => ['pendiente', 'en_preparacion', 'llamado'].includes(p.estado));
+      const el = document.getElementById('queue-list');
+      el.innerHTML = pedidos.length === 0
+        ? '<div class="queue-empty"><i class="fa-regular fa-circle-check"></i><span>Sin pedidos en cola</span></div>'
+        : pedidos.map(p => {
+          const cls = p.estado === 'llamado' ? 'q-ready' : p.estado === 'en_preparacion' ? 'q-prep' : '';
+          const badgeCls = p.estado === 'llamado' ? 'qb-ready' : p.estado === 'en_preparacion' ? 'qb-prep' : 'qb-wait';
+          const badgeTxt = p.estado === 'llamado' ? 'Llamado' : p.estado === 'en_preparacion' ? 'En prep.' : 'Esperando';
+          return `
         <div class="queue-item ${cls}">
           <span class="queue-num">${p.turno}</span>
           <div class="queue-right">
@@ -109,24 +113,25 @@ function renderCola() {
             <span class="queue-time"><i class="fa-regular fa-clock"></i> ~${p.tiempoEstimado} min</span>
           </div>
         </div>`;
-      }).join('');
-}
+        }).join('');
+    }
 
-// ─── BROADCAST ────────────────────────────────────────
-Canal.escuchar(EVENTOS.NUEVO_PEDIDO,    () => renderCola());
-Canal.escuchar(EVENTOS.PEDIDO_EN_PREP,  () => renderCola());
-Canal.escuchar(EVENTOS.TURNO_CANCELADO, ({ turno }) => {
-  const el = document.getElementById('at-num');
-  if (el && el.textContent === turno) clearTurno();
-  renderCola();
-});
-Canal.escuchar(EVENTOS.TURNO_COMPLETADO, () => { clearTurno(); renderCola(); });
-Canal.escuchar(EVENTOS.TURNO_LLAMADO, ({ turno }) => { mostrarTurno(turno); renderCola(); });
+    // ─── BROADCAST ────────────────────────────────────────
+    Canal.escuchar(EVENTOS.NUEVO_PEDIDO, () => renderCola());
+    Canal.escuchar(EVENTOS.PEDIDO_EN_PREP, () => renderCola());
+    Canal.escuchar(EVENTOS.TURNO_CANCELADO, ({ turno }) => {
+      const el = document.getElementById('at-num');
+      if (el && el.textContent === turno) clearTurno();
+      renderCola();
+    });
+    Canal.escuchar(EVENTOS.TURNO_COMPLETADO, () => { clearTurno(); renderCola(); });
+    Canal.escuchar(EVENTOS.TURNO_LLAMADO, ({ turno }) => { mostrarTurno(turno); renderCola(); });
 
-// ─── INIT ─────────────────────────────────────────────
-renderCola();
-const activo = Store.getPedidos().find(p => p.estado === 'llamado');
-if (activo) mostrarTurno(activo.turno);
-</script>
+    // ─── INIT ─────────────────────────────────────────────
+    renderCola();
+    const activo = Store.getPedidos().find(p => p.estado === 'llamado');
+    if (activo) mostrarTurno(activo.turno);
+  </script>
 </body>
+
 </html>
