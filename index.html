@@ -115,96 +115,115 @@
   <script src="js/store.js"></script>
   <script src="js/auth.js"></script>
   <script>
-    Store.seedInicial();
-
-    // Redirección si ya existe una sesión activa
-    const s = Auth.getSesion();
-    if (s) window.location.href = s.rol === 'admin' ? 'admin.html' : 'kiosco.html';
-
-    let modoActual = 'login';
-
-    const formTitle = document.getElementById('form-title');
-    const formSub = document.getElementById('form-sub');
-    const groupNombre = document.getElementById('group-nombre');
-    const inputNombre = document.getElementById('nombre');
-    const alertBox = document.getElementById('alert-box');
-    const btnText = document.getElementById('btn-text');
-    const btnToggle = document.getElementById('btn-toggle-mode');
-
-    function mostrarNotificacion(mensaje, tipo = 'error') {
-      alertBox.style.display = 'block';
-      alertBox.textContent = mensaje;
-      alertBox.className = `alert-message alert-${tipo}`;
-    }
-
-    function ocultarNotificacion() {
-      alertBox.style.display = 'none';
-      alertBox.className = 'alert-message';
-    }
-
-    btnToggle.addEventListener('click', () => {
-      ocultarNotificacion();
-      if (modoActual === 'login') {
-        modoActual = 'register';
-        formTitle.textContent = 'Crear cuenta';
-        formSub.textContent = 'Registrate para ingresar al sistema de pedidos';
-        groupNombre.style.display = 'block';
-        inputNombre.required = true;
-        btnText.textContent = 'Registrarse';
-        btnToggle.textContent = '¿Ya tenés cuenta? Iniciar sesión';
-      } else {
-        modoActual = 'login';
-        formTitle.textContent = 'Bienvenido';
-        formSub.textContent = 'Ingresá tus credenciales para continuar';
-        groupNombre.style.display = 'none';
-        inputNombre.required = false;
-        btnText.textContent = 'Ingresar';
-        btnToggle.textContent = '¿No tenés cuenta? Registrate aquí';
+    document.addEventListener('DOMContentLoaded', () => {
+      // Cargar datos iniciales de la tienda y usuario admin
+      if (typeof Store !== 'undefined') {
+        Store.seedInicial();
       }
-    });
 
-    document.getElementById('form-login').addEventListener('submit', e => {
-      e.preventDefault();
-      ocultarNotificacion();
+      // Redirección si ya existe una sesión activa
+      const sesionActual = (typeof Auth !== 'undefined' && Auth.getSesion)
+        ? Auth.getSesion()
+        : JSON.parse(localStorage.getItem(STORE_KEYS.SESION) || 'null');
 
-      const u = document.getElementById('usuario').value.trim();
-      const p = document.getElementById('password').value.trim();
-      const nom = inputNombre.value.trim();
-
-      if (modoActual === 'login') {
-        const existe = Store.existeUsuario(u);
-
-        if (!existe) {
-          mostrarNotificacion('Usuario no existente, intente registrarlo.', 'warning');
-          return;
-        }
-
-        const user = Auth.login(u, p);
-        if (!user) {
-          mostrarNotificacion('Contraseña incorrecta. Intente de nuevo.', 'error');
-          return;
-        }
-
-        window.location.href = user.rol === 'admin' ? 'admin.html' : 'kiosco.html';
-
-      } else {
-        if (!nom) {
-          mostrarNotificacion('Por favor, ingrese su nombre.', 'error');
-          return;
-        }
-
-        const res = Auth.registrar(nom, u, p, 'cliente');
-
-        if (!res.ok) {
-          mostrarNotificacion(res.msg, 'warning');
-          return;
-        }
-
-        mostrarNotificacion('¡Registro exitoso! Redirigiendo...', 'success');
-        setTimeout(() => {
-          window.location.href = 'kiosco.html';
-        }, 1000);
+      if (sesionActual) {
+        window.location.href = sesionActual.rol === 'admin' ? 'admin.html' : 'kiosco.html';
+        return;
       }
+
+      let modoActual = 'login';
+
+      const formTitle = document.getElementById('form-title');
+      const formSub = document.getElementById('form-sub');
+      const groupNombre = document.getElementById('group-nombre');
+      const inputNombre = document.getElementById('nombre');
+      const alertBox = document.getElementById('alert-box');
+      const btnText = document.getElementById('btn-text');
+      const btnToggle = document.getElementById('btn-toggle-mode');
+      const formLogin = document.getElementById('form-login');
+
+      function mostrarNotificacion(mensaje, tipo = 'error') {
+        alertBox.style.display = 'block';
+        alertBox.textContent = mensaje;
+        alertBox.className = `alert-message alert-${tipo}`;
+      }
+
+      function ocultarNotificacion() {
+        alertBox.style.display = 'none';
+        alertBox.className = 'alert-message';
+      }
+
+      btnToggle.addEventListener('click', () => {
+        ocultarNotificacion();
+        if (modoActual === 'login') {
+          modoActual = 'register';
+          formTitle.textContent = 'Crear cuenta';
+          formSub.textContent = 'Registrate para ingresar al sistema de pedidos';
+          groupNombre.style.display = 'block';
+          inputNombre.required = true;
+          btnText.textContent = 'Registrarse';
+          btnToggle.textContent = '¿Ya tenés cuenta? Iniciar sesión';
+        } else {
+          modoActual = 'login';
+          formTitle.textContent = 'Bienvenido';
+          formSub.textContent = 'Ingresá tus credenciales para continuar';
+          groupNombre.style.display = 'none';
+          inputNombre.required = false;
+          btnText.textContent = 'Ingresar';
+          btnToggle.textContent = '¿No tenés cuenta? Registrate aquí';
+        }
+      });
+
+      formLogin.addEventListener('submit', e => {
+        e.preventDefault();
+        ocultarNotificacion();
+
+        const u = document.getElementById('usuario').value.trim();
+        const p = document.getElementById('password').value.trim();
+        const nom = inputNombre.value.trim();
+
+        if (modoActual === 'login') {
+          // Comprobar existencia del usuario mediante Store
+          const existe = Store.existeUsuario(u);
+
+          if (!existe) {
+            mostrarNotificacion('Usuario no existente, intente registrarlo.', 'warning');
+            return;
+          }
+
+          // Intentar iniciar sesión
+          const user = Store.validarCredenciales(u, p);
+          if (!user) {
+            mostrarNotificacion('Contraseña incorrecta. Intente de nuevo.', 'error');
+            return;
+          }
+
+          // Guardar sesión activa en LocalStorage
+          localStorage.setItem(STORE_KEYS.SESION, JSON.stringify(user));
+
+          // Redirigir según el rol
+          window.location.href = user.rol === 'admin' ? 'admin.html' : 'kiosco.html';
+
+        } else {
+          if (!nom) {
+            mostrarNotificacion('Por favor, ingrese su nombre.', 'error');
+            return;
+          }
+
+          if (Store.existeUsuario(u)) {
+            mostrarNotificacion('El usuario ya se encuentra registrado.', 'warning');
+            return;
+          }
+
+          const nuevoUsuario = Store.registrarUsuario(nom, u, p, 'cliente');
+          localStorage.setItem(STORE_KEYS.SESION, JSON.stringify(nuevoUsuario));
+
+          mostrarNotificacion('¡Registro exitoso! Redirigiendo...', 'success');
+          setTimeout(() => {
+            window.location.href = 'kiosco.html';
+          }, 1000);
+        }
+      });
     });
   </script>
 </body>
