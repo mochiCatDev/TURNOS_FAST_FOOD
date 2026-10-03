@@ -3,69 +3,89 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FastTurno — Iniciar Sesión</title>
+  <title>FastTurno — Acceso</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div class="login-page">
-    <div class="login-card">
-      <div class="login-logo">
-        <div class="logo-icon">🍔</div>
-        <h1>FastTurno</h1>
-        <p>Sistema de Gestión de Turnos</p>
+<div class="login-page">
+
+  <!-- ASIDE IZQUIERDO -->
+  <aside class="login-aside">
+    <div>
+      <i class="fa-solid fa-burger" style="font-size:2.4rem;color:rgba(255,255,255,.9);margin-bottom:18px;display:block"></i>
+      <h1>FastTurno</h1>
+      <p>Gestión inteligente de turnos para locales de comida rápida. Controlá pedidos, tiempos y atención al cliente desde un solo lugar.</p>
+    </div>
+    <div class="login-features">
+      <div class="login-feature">
+        <div class="feat-icon"><i class="fa-solid fa-chart-line"></i></div>
+        Historial y estadísticas del día en tiempo real
       </div>
-
-      <form id="form-login">
-        <div class="form-group">
-          <label for="usuario">Usuario</label>
-          <input type="text" id="usuario" class="form-control" placeholder="Ingresa tu usuario" autocomplete="off" required />
-        </div>
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <input type="password" id="password" class="form-control" placeholder="Ingresa tu contraseña" required />
-        </div>
-        <button type="submit" class="btn btn-primary btn-block btn-lg">Ingresar</button>
-        <p class="login-error" id="error-msg"></p>
-      </form>
-
-      <div class="login-hint">
-        <strong>Credenciales de prueba:</strong><br/>
-        Admin: <code>admin</code> / <code>admin123</code><br/>
-        Kiosco: <code>kiosco</code> / <code>kiosco123</code>
+      <div class="login-feature">
+        <div class="feat-icon"><i class="fa-solid fa-bell"></i></div>
+        Llamada de turnos con pantalla y sonido
+      </div>
+      <div class="login-feature">
+        <div class="feat-icon"><i class="fa-solid fa-bolt"></i></div>
+        Sincronización instantánea entre ventanas
       </div>
     </div>
+  </aside>
+
+  <!-- PANEL DERECHO -->
+  <div class="login-panel">
+    <div class="login-logo">
+      <i class="fa-solid fa-circle-half-stroke"></i>
+      <span>FastTurno</span>
+    </div>
+    <h2>Bienvenido</h2>
+    <p>Ingresá tus credenciales para continuar</p>
+
+    <form class="login-form" id="form-login">
+      <div class="form-group">
+        <label for="usuario">Usuario</label>
+        <div class="input-wrap">
+          <i class="fa-regular fa-user"></i>
+          <input type="text" id="usuario" class="form-control" placeholder="Nombre de usuario" autocomplete="off" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <div class="input-wrap">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="password" class="form-control" placeholder="Contraseña" required />
+        </div>
+      </div>
+      <p class="login-error" id="error-msg"></p>
+      <button type="submit" class="btn btn-primary btn-block btn-lg">
+        <i class="fa-solid fa-arrow-right-to-bracket"></i> Ingresar
+      </button>
+    </form>
+
+    <div class="login-hint">
+      <strong>Credenciales de prueba</strong>
+      <span>Admin: <code>admin</code> / <code>admin123</code></span>
+      <span>Kiosco: <code>kiosco</code> / <code>kiosco123</code></span>
+    </div>
   </div>
+</div>
 
-  <!-- Toast container -->
-  <div id="toast-container"></div>
+<script src="js/store.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  Store.seedInicial();
+  const s = Auth.getSesion();
+  if (s) window.location.href = s.rol === 'admin' ? 'admin.html' : 'kiosco.html';
 
-  <script src="js/store.js"></script>
-  <script src="js/channel.js"></script>
-  <script src="js/auth.js"></script>
-  <script>
-    // Inicializar datos de prueba
-    Store.seedInicial();
-
-    // Si ya hay sesión activa, redirigir
-    const sesion = Auth.getSesion();
-    if (sesion) {
-      window.location.href = sesion.rol === 'admin' ? 'admin.html' : 'kiosco.html';
-    }
-
-    document.getElementById('form-login').addEventListener('submit', e => {
-      e.preventDefault();
-      const usuario  = document.getElementById('usuario').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const errorEl  = document.getElementById('error-msg');
-
-      const user = Auth.login(usuario, password);
-      if (!user) {
-        errorEl.textContent = '⚠️ Usuario o contraseña incorrectos.';
-        return;
-      }
-      errorEl.textContent = '';
-      window.location.href = user.rol === 'admin' ? 'admin.html' : 'kiosco.html';
-    });
-  </script>
+  document.getElementById('form-login').addEventListener('submit', e => {
+    e.preventDefault();
+    const u = document.getElementById('usuario').value.trim();
+    const p = document.getElementById('password').value.trim();
+    const user = Auth.login(u, p);
+    if (!user) { document.getElementById('error-msg').textContent = 'Usuario o contraseña incorrectos.'; return; }
+    window.location.href = user.rol === 'admin' ? 'admin.html' : 'kiosco.html';
+  });
+</script>
 </body>
 </html>

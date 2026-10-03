@@ -4,274 +4,320 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FastTurno — Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-<div class="admin-layout">
+<div class="app-layout">
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="sidebar-brand"><span>🍔</span> FastTurno</div>
+    <div class="sidebar-brand">
+      <i class="fa-solid fa-burger"></i> FastTurno
+    </div>
     <nav class="sidebar-nav">
-      <div class="nav-item active" data-section="menu">
-        <span class="nav-icon">📋</span> Menú
+      <div class="nav-item active" data-sec="menu">
+        <i class="fa-solid fa-utensils"></i> Menú
       </div>
-      <div class="nav-item" data-section="stock">
-        <span class="nav-icon">📦</span> Stock
+      <div class="nav-item" data-sec="stock">
+        <i class="fa-solid fa-boxes-stacked"></i> Stock
       </div>
-      <div class="nav-item" data-section="caja">
-        <span class="nav-icon">🎫</span> Caja
-        <span id="badge-cola" class="badge badge-danger" style="margin-left:auto;display:none">0</span>
+      <div class="nav-item" data-sec="caja">
+        <i class="fa-solid fa-ticket"></i> Caja
+        <span class="nav-badge" id="badge-cola">0</span>
       </div>
-      <div class="nav-item" data-section="historial">
-        <span class="nav-icon">📊</span> Historial
+      <div class="nav-item" data-sec="historial">
+        <i class="fa-solid fa-chart-bar"></i> Historial
       </div>
     </nav>
-    <div class="sidebar-user">
-      <strong id="user-nombre">Admin</strong>
-      Panel de Administración
-      <button class="btn-logout" onclick="Auth.logout()">🚪 Cerrar sesión</button>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-initials">A</div>
+        <div class="user-info">
+          <strong id="user-nombre">Admin</strong>
+          <span>Administrador</span>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-block btn-sm" onclick="Auth.logout()">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión
+      </button>
     </div>
   </aside>
 
   <!-- MAIN -->
-  <main class="main-content">
+  <div class="main">
 
-    <!-- ════ SECCIÓN MENÚ ════ -->
-    <div class="section active" id="sec-menu">
-      <div class="page-header" style="display:flex;justify-content:space-between;align-items:center">
-        <div>
-          <h2>📋 Gestión de Menú</h2>
-          <p>Productos disponibles para los clientes</p>
-        </div>
-        <button class="btn btn-primary" onclick="abrirModalProducto()">+ Agregar producto</button>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th></th><th>Nombre</th><th>Categoría</th>
-              <th>Precio</th><th>T. Entrega</th><th>Stock</th><th>Estado</th><th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tabla-menu"></tbody>
-        </table>
+    <!-- TOPBAR dinámico -->
+    <div class="topbar">
+      <div>
+        <h2 id="topbar-title">Gestión de Menú</h2>
+        <p id="topbar-sub">Administrá los productos disponibles</p>
       </div>
     </div>
 
-    <!-- ════ SECCIÓN STOCK ════ -->
-    <div class="section" id="sec-stock">
-      <div class="page-header">
-        <h2>📦 Gestión de Stock</h2>
-        <p>Actualiza la cantidad disponible de cada producto</p>
-      </div>
-      <div class="stock-grid" id="stock-grid"></div>
-    </div>
+    <div class="page-body">
 
-    <!-- ════ SECCIÓN CAJA ════ -->
-    <div class="section" id="sec-caja">
-      <div class="page-header">
-        <h2>🎫 Caja — Control de Turnos</h2>
-        <p>Gestiona la cola de pedidos en tiempo real</p>
-      </div>
-      <div class="caja-layout">
-        <!-- Cola de espera -->
-        <div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <strong>Cola de espera</strong>
-            <button class="btn btn-dark btn-sm" onclick="resetearTurnos()">🔄 Resetear turnos</button>
-          </div>
-          <div class="cola-list" id="cola-list">
-            <p class="text-muted text-center" style="padding:30px 0">No hay pedidos en cola</p>
-          </div>
+      <!-- ══════ MENÚ ══════ -->
+      <div class="section active" id="sec-menu">
+        <div class="section-toolbar">
+          <span style="font-size:.88rem;color:var(--muted)"><span id="menu-count">0</span> productos registrados</span>
+          <button class="btn btn-primary" onclick="abrirModal()">
+            <i class="fa-solid fa-plus"></i> Agregar producto
+          </button>
         </div>
-        <!-- Pantalla turno actual -->
-        <div>
-          <strong style="display:block;margin-bottom:14px">Turno en pantalla</strong>
-          <div class="pantalla-turno">
-            <div class="pantalla-label">🔊 Turno llamado</div>
-            <div class="pantalla-numero" id="pantalla-num">—</div>
-            <div class="pantalla-sub" id="pantalla-sub">Sin turno activo</div>
-          </div>
-          <div class="caja-actions">
-            <button class="btn btn-primary" onclick="llamarSiguiente()">📢 Llamar siguiente</button>
-            <button class="btn btn-success" onclick="marcarEntregado()">✅ Entregado</button>
-            <button class="btn btn-danger btn-sm" onclick="cancelarTurnoActual()">✖ Cancelar</button>
-          </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Producto</th><th>Categoría</th><th>Precio</th>
+                <th>T. Entrega</th><th>Stock</th><th>Estado</th><th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-menu"></tbody>
+          </table>
         </div>
       </div>
-    </div>
 
-    <!-- ════ SECCIÓN HISTORIAL ════ -->
-    <div class="section" id="sec-historial">
-      <div class="page-header">
-        <h2>📊 Historial del día</h2>
-        <p>Resumen de pedidos completados</p>
+      <!-- ══════ STOCK ══════ -->
+      <div class="section" id="sec-stock">
+        <div class="section-toolbar">
+          <span style="font-size:.88rem;color:var(--muted)">Ajustá el stock de cada producto</span>
+        </div>
+        <div class="stock-grid" id="stock-grid"></div>
       </div>
-      <div class="historial-stats" id="historial-stats"></div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Turno</th><th>Hora</th><th>Items</th>
-              <th>Tiempo Est.</th><th>Total</th><th>Estado</th>
-            </tr>
-          </thead>
-          <tbody id="tabla-historial"></tbody>
-        </table>
+
+      <!-- ══════ CAJA ══════ -->
+      <div class="section" id="sec-caja">
+        <div class="caja-grid">
+          <!-- Cola -->
+          <div class="cola-wrap">
+            <div class="cola-header">
+              <h3>Cola de pedidos</h3>
+              <button class="btn btn-ghost btn-sm" onclick="resetearTurnos()">
+                <i class="fa-solid fa-rotate"></i> Resetear
+              </button>
+            </div>
+            <div class="cola-body" id="cola-list">
+              <div class="cola-empty">
+                <i class="fa-regular fa-circle-check"></i>
+                Sin pedidos en cola
+              </div>
+            </div>
+          </div>
+          <!-- Pantalla -->
+          <div>
+            <div class="pantalla-card">
+              <div class="pantalla-label">Turno en pantalla</div>
+              <div class="pantalla-num" id="pantalla-num">—</div>
+              <div class="pantalla-msg" id="pantalla-msg">Sin turno activo</div>
+            </div>
+            <div class="caja-actions-bar">
+              <button class="btn btn-primary" onclick="llamarSiguiente()">
+                <i class="fa-solid fa-volume-high"></i> Llamar siguiente
+              </button>
+              <button class="btn btn-success" onclick="marcarEntregado()">
+                <i class="fa-solid fa-check"></i> Entregado
+              </button>
+              <button class="btn btn-danger btn-sm" onclick="cancelarTurnoActual()">
+                <i class="fa-solid fa-xmark"></i> Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
 
-  </main>
-</div>
+      <!-- ══════ HISTORIAL ══════ -->
+      <div class="section" id="sec-historial">
+        <div class="stats-row" id="historial-stats"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Turno</th><th>Hora</th><th>Items</th><th>T. Est.</th><th>Total</th><th>Estado</th></tr>
+            </thead>
+            <tbody id="tabla-historial"></tbody>
+          </table>
+        </div>
+      </div>
 
-<!-- ════ MODAL PRODUCTO ════ -->
+    </div><!-- /page-body -->
+  </div><!-- /main -->
+</div><!-- /app-layout -->
+
+<!-- MODAL PRODUCTO -->
 <div class="modal-overlay" id="modal-producto">
   <div class="modal">
-    <h3 id="modal-titulo">Agregar Producto</h3>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Nombre</label>
-        <input type="text" id="p-nombre" class="form-control" placeholder="Ej: Combo Clásico" />
-      </div>
-      <div class="form-group">
-        <label>Emoji</label>
-        <input type="text" id="p-emoji" class="form-control" placeholder="🍔" maxlength="2" />
-      </div>
+    <div class="modal-header">
+      <h3 id="modal-titulo">Agregar producto</h3>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
     </div>
-    <div class="form-group">
-      <label>Descripción</label>
-      <input type="text" id="p-desc" class="form-control" placeholder="Descripción corta" />
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Precio ($)</label>
-        <input type="number" id="p-precio" class="form-control" placeholder="1200" min="0" />
+    <div class="modal-body">
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" id="p-nombre" class="form-control" placeholder="Ej: Combo Clásico" />
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <select id="p-categoria" class="form-control">
+            <option value="combos">Combos</option>
+            <option value="hamburguesas">Hamburguesas</option>
+            <option value="acompañamientos">Acompañamientos</option>
+            <option value="bebidas">Bebidas</option>
+            <option value="postres">Postres</option>
+          </select>
+        </div>
       </div>
       <div class="form-group">
-        <label>Tiempo de entrega (min)</label>
-        <input type="number" id="p-tiempo" class="form-control" placeholder="10" min="1" max="60" />
+        <label>Descripción</label>
+        <input type="text" id="p-desc" class="form-control" placeholder="Descripción corta" />
       </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Stock inicial</label>
-        <input type="number" id="p-stock" class="form-control" placeholder="20" min="0" />
-      </div>
-      <div class="form-group">
-        <label>Categoría</label>
-        <select id="p-categoria" class="form-control">
-          <option value="combos">Combos</option>
-          <option value="hamburguesas">Hamburguesas</option>
-          <option value="acompañamientos">Acompañamientos</option>
-          <option value="bebidas">Bebidas</option>
-          <option value="postres">Postres</option>
-        </select>
+      <div class="form-grid-3">
+        <div class="form-group">
+          <label>Precio ($)</label>
+          <input type="number" id="p-precio" class="form-control" placeholder="1200" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Tiempo entrega (min)</label>
+          <input type="number" id="p-tiempo" class="form-control" placeholder="10" min="1" max="90" />
+        </div>
+        <div class="form-group">
+          <label>Stock inicial</label>
+          <input type="number" id="p-stock" class="form-control" placeholder="20" min="0" />
+        </div>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-outline" onclick="cerrarModal('modal-producto')">Cancelar</button>
+      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
     </div>
   </div>
 </div>
 
-<!-- TOAST -->
 <div id="toast-container"></div>
 
 <script src="js/store.js"></script>
 <script src="js/channel.js"></script>
 <script src="js/auth.js"></script>
 <script>
-// ── INIT ──────────────────────────────────────────────
 Store.seedInicial();
 Auth.proteger('admin');
-document.getElementById('user-nombre').textContent = Auth.getNombre();
 
-let _editandoId = null;
+const sesion = Auth.getSesion();
+document.getElementById('user-nombre').textContent   = sesion.nombre;
+document.getElementById('user-initials').textContent = sesion.nombre.charAt(0).toUpperCase();
+
+let _editandoId  = null;
 let _turnoActual = null;
 
-// ── NAVEGACIÓN ────────────────────────────────────────
-document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
+// ─── TOPBAR LABELS ────────────────────────────────────
+const TOPBAR = {
+  menu:     ['Gestión de Menú',   'Administrá los productos disponibles'],
+  stock:    ['Gestión de Stock',  'Controlá la disponibilidad de cada producto'],
+  caja:     ['Caja',              'Gestioná la cola de turnos en tiempo real'],
+  historial:['Historial del día', 'Resumen de pedidos y estadísticas']
+};
+
+// ─── NAVEGACIÓN ───────────────────────────────────────
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const sec = el.dataset.sec;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    item.classList.add('active');
-    document.getElementById('sec-' + item.dataset.section).classList.add('active');
-    if (item.dataset.section === 'historial') renderHistorial();
+    el.classList.add('active');
+    document.getElementById('sec-' + sec).classList.add('active');
+    document.getElementById('topbar-title').textContent = TOPBAR[sec][0];
+    document.getElementById('topbar-sub').textContent   = TOPBAR[sec][1];
+    if (sec === 'historial') renderHistorial();
   });
 });
 
-// ── HELPERS MODAL ─────────────────────────────────────
-function abrirModal(id)  { document.getElementById(id).classList.add('active'); }
-function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
-
-// ── TOASTS ───────────────────────────────────────────
+// ─── TOAST ───────────────────────────────────────────
 function toast(msg, tipo = '') {
-  const c = document.getElementById('toast-container');
-  const t = document.createElement('div');
-  t.className = `toast ${tipo}`;
-  t.textContent = msg;
-  c.appendChild(t);
-  setTimeout(() => t.remove(), 3200);
+  const el = Object.assign(document.createElement('div'), { className: `toast ${tipo}`, textContent: msg });
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3000);
 }
 
-// ═══════════════════════════════════════════════════════
-// SECCIÓN MENÚ
-// ═══════════════════════════════════════════════════════
-function renderMenu() {
-  const tbody = document.getElementById('tabla-menu');
-  const menu  = Store.getMenu();
-  tbody.innerHTML = menu.length === 0
-    ? '<tr><td colspan="8" class="text-center text-muted" style="padding:30px">Sin productos en el menú</td></tr>'
-    : menu.map(p => `
-      <tr>
-        <td class="td-emoji">${p.emoji}</td>
-        <td><strong>${p.nombre}</strong></td>
-        <td><span class="badge badge-muted">${p.categoria}</span></td>
-        <td><strong>$${p.precio.toLocaleString()}</strong></td>
-        <td>⏱️ ${p.tiempoEntrega} min</td>
-        <td>${stockBadge(p.stock)}</td>
-        <td>${p.disponible ? '<span class="badge badge-success">✅ Activo</span>' : '<span class="badge badge-danger">❌ Inactivo</span>'}</td>
-        <td style="display:flex;gap:6px">
-          <button class="btn btn-info btn-sm" onclick="editarProducto('${p.id}')">✏️ Editar</button>
-          <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')">🗑️</button>
-          <button class="btn btn-sm ${p.disponible ? 'btn-warning' : 'btn-success'}" onclick="toggleDisponible('${p.id}', ${p.disponible})">
-            ${p.disponible ? 'Pausar' : 'Activar'}
-          </button>
-        </td>
-      </tr>`).join('');
-}
-
-function stockBadge(stock) {
-  if (stock === 0) return `<span class="tag-stock-out">🔴 ${stock}</span>`;
-  if (stock <= 5)  return `<span class="tag-stock-low">🟡 ${stock}</span>`;
-  return `<span class="tag-stock-ok">🟢 ${stock}</span>`;
-}
-
-function abrirModalProducto(id = null) {
+// ─── MODAL ───────────────────────────────────────────
+function abrirModal(id = null) {
   _editandoId = id;
-  document.getElementById('modal-titulo').textContent = id ? 'Editar Producto' : 'Agregar Producto';
+  document.getElementById('modal-titulo').textContent = id ? 'Editar producto' : 'Agregar producto';
   if (id) {
     const p = Store.getProducto(id);
     document.getElementById('p-nombre').value    = p.nombre;
-    document.getElementById('p-emoji').value     = p.emoji;
     document.getElementById('p-desc').value      = p.descripcion;
     document.getElementById('p-precio').value    = p.precio;
     document.getElementById('p-tiempo').value    = p.tiempoEntrega;
     document.getElementById('p-stock').value     = p.stock;
     document.getElementById('p-categoria').value = p.categoria;
   } else {
-    document.getElementById('modal-titulo').closest('.modal').querySelectorAll('input,select')
-      .forEach(el => el.value = '');
+    ['p-nombre','p-desc','p-precio','p-tiempo','p-stock'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('p-categoria').value = 'combos';
   }
-  abrirModal('modal-producto');
+  document.getElementById('modal-producto').classList.add('open');
+}
+function cerrarModal() { document.getElementById('modal-producto').classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════
+// MENÚ
+// ═══════════════════════════════════════════════════════
+const catIconos = { combos:'fa-gift', hamburguesas:'fa-burger', 'acompañamientos':'fa-drumstick-bite', bebidas:'fa-mug-hot', postres:'fa-cake-candles' };
+
+function stockDot(stock) {
+  if (stock === 0) return '<span class="stock-dot dot-out" title="Agotado"></span>';
+  if (stock <= 5)  return '<span class="stock-dot dot-low" title="Stock bajo"></span>';
+  return '<span class="stock-dot dot-ok" title="OK"></span>';
+}
+
+function renderMenu() {
+  const menu = Store.getMenu();
+  document.getElementById('menu-count').textContent = menu.length;
+  document.getElementById('tabla-menu').innerHTML = menu.length === 0
+    ? '<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted)">Sin productos registrados</td></tr>'
+    : menu.map(p => `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0">
+              <i class="fa-solid ${catIconos[p.categoria] || 'fa-utensils'}"></i>
+            </div>
+            <div>
+              <div style="font-weight:600;font-size:.88rem">${p.nombre}</div>
+              <div style="font-size:.72rem;color:var(--muted)">${p.descripcion}</div>
+            </div>
+          </div>
+        </td>
+        <td><span class="badge badge-neutral">${p.categoria}</span></td>
+        <td><strong>$${p.precio.toLocaleString()}</strong></td>
+        <td style="font-size:.82rem">${p.tiempoEntrega} min</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:7px">
+            ${stockDot(p.stock)}
+            <span style="font-size:.85rem;font-weight:600">${p.stock}</span>
+          </div>
+        </td>
+        <td>
+          ${p.disponible
+            ? '<span class="badge badge-success"><i class="fa-solid fa-circle" style="font-size:.45rem"></i> Activo</span>'
+            : '<span class="badge badge-danger"><i class="fa-solid fa-circle" style="font-size:.45rem"></i> Pausado</span>'}
+        </td>
+        <td>
+          <div class="td-actions">
+            <button class="btn btn-ghost btn-sm" onclick="abrirModal('${p.id}')"><i class="fa-solid fa-pen"></i></button>
+            <button class="btn btn-${p.disponible?'warning':'success'} btn-sm" onclick="toggleDisponible('${p.id}',${p.disponible})">
+              <i class="fa-solid fa-${p.disponible?'pause':'play'}"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>`).join('');
 }
 
 function guardarProducto() {
   const datos = {
     nombre:       document.getElementById('p-nombre').value.trim(),
-    emoji:        document.getElementById('p-emoji').value.trim() || '🍔',
     descripcion:  document.getElementById('p-desc').value.trim(),
     precio:       parseFloat(document.getElementById('p-precio').value) || 0,
     tiempoEntrega:parseInt(document.getElementById('p-tiempo').value)   || 10,
@@ -280,21 +326,12 @@ function guardarProducto() {
     disponible:   true
   };
   if (!datos.nombre || datos.precio <= 0) { toast('Completá nombre y precio', 'error'); return; }
-
-  if (_editandoId) {
-    Store.actualizarProducto(_editandoId, datos);
-    toast('Producto actualizado ✅', 'success');
-  } else {
-    Store.agregarProducto(datos);
-    toast('Producto agregado ✅', 'success');
-  }
-  cerrarModal('modal-producto');
-  renderMenu();
-  renderStock();
+  _editandoId ? Store.actualizarProducto(_editandoId, datos) : Store.agregarProducto(datos);
+  cerrarModal();
+  renderMenu(); renderStock();
   Canal.emitir(EVENTOS.MENU_ACTUALIZADO, Store.getMenu());
+  toast(_editandoId ? 'Producto actualizado' : 'Producto agregado', 'success');
 }
-
-function editarProducto(id)   { abrirModalProducto(id); }
 
 function eliminarProducto(id) {
   if (!confirm('¿Eliminar este producto?')) return;
@@ -308,192 +345,176 @@ function toggleDisponible(id, actual) {
   Store.actualizarProducto(id, { disponible: !actual });
   renderMenu(); renderStock();
   Canal.emitir(EVENTOS.MENU_ACTUALIZADO, Store.getMenu());
-  toast(!actual ? 'Producto activado ✅' : 'Producto pausado ⏸️');
+  toast(!actual ? 'Producto activado' : 'Producto pausado');
 }
 
 // ═══════════════════════════════════════════════════════
-// SECCIÓN STOCK
+// STOCK
 // ═══════════════════════════════════════════════════════
 function renderStock() {
-  const grid = document.getElementById('stock-grid');
-  const menu = Store.getMenu();
-  grid.innerHTML = menu.map(p => `
-    <div class="stock-card">
-      <div class="stock-card-top">
-        <span class="stock-emoji">${p.emoji}</span>
-        <div>
-          <div class="stock-name">${p.nombre}</div>
-          <div class="stock-cat">${p.categoria}</div>
-        </div>
+  document.getElementById('stock-grid').innerHTML = Store.getMenu().map(p => `
+    <div class="stock-item">
+      <div class="stock-icon"><i class="fa-solid ${catIconos[p.categoria] || 'fa-utensils'}"></i></div>
+      <div class="stock-info">
+        <div class="name">${p.nombre}</div>
+        <div class="cat">${p.categoria}</div>
       </div>
+      ${stockDot(p.stock)}
       <div class="stock-controls">
-        ${stockBadge(p.stock)}
-        <input type="number" id="stock-inp-${p.id}" value="${p.stock}" min="0" style="margin-left:auto" />
-        <button class="btn btn-primary btn-sm" onclick="actualizarStockManual('${p.id}')">Actualizar</button>
+        <input type="number" id="si-${p.id}" value="${p.stock}" min="0" />
+        <button class="btn btn-primary btn-sm" onclick="actualizarStock('${p.id}')">
+          <i class="fa-solid fa-check"></i>
+        </button>
       </div>
     </div>`).join('');
 }
 
-function actualizarStockManual(id) {
-  const val = parseInt(document.getElementById(`stock-inp-${id}`).value);
+function actualizarStock(id) {
+  const val = parseInt(document.getElementById('si-'+id).value);
   if (isNaN(val) || val < 0) { toast('Valor inválido', 'error'); return; }
-  const prod    = Store.getProducto(id);
-  const delta   = val - prod.stock;
+  const delta = val - Store.getProducto(id).stock;
   Store.actualizarStock(id, delta);
   renderStock(); renderMenu();
   Canal.emitir(EVENTOS.STOCK_ACTUALIZADO, Store.getMenu());
-  toast('Stock actualizado ✅', 'success');
+  toast('Stock actualizado', 'success');
 }
 
 // ═══════════════════════════════════════════════════════
-// SECCIÓN CAJA
+// CAJA
 // ═══════════════════════════════════════════════════════
 function renderCola() {
-  const cola   = Store.getPedidos().filter(p => ['pendiente','en_preparacion','llamado'].includes(p.estado));
-  const list   = document.getElementById('cola-list');
-  const badge  = document.getElementById('badge-cola');
+  const cola = Store.getPedidos().filter(p => ['pendiente','en_preparacion','llamado'].includes(p.estado));
+  const badgeEl = document.getElementById('badge-cola');
+  badgeEl.textContent = cola.length;
+  badgeEl.classList.toggle('show', cola.length > 0);
 
-  badge.textContent = cola.length;
-  badge.style.display = cola.length > 0 ? 'inline-block' : 'none';
-
-  if (cola.length === 0) {
-    list.innerHTML = '<p class="text-muted text-center" style="padding:30px 0">🎉 Sin pedidos pendientes</p>';
-    return;
-  }
-
-  list.innerHTML = cola.map(p => {
-    const itemsStr = p.items.map(i => `${i.nombre} x${i.cantidad}`).join(', ');
-    let claseCard  = p.estado === 'llamado' ? 'llamado' : p.estado === 'en_preparacion' ? 'en-prep' : '';
-    return `
-    <div class="turno-card ${claseCard}">
-      <div>
-        <div class="turno-numero">${p.turno}</div>
-        <div class="turno-items">${itemsStr}</div>
-        <div class="turno-tiempo">⏱️ ~${p.tiempoEstimado} min · $${p.total.toLocaleString()}</div>
-      </div>
-      <div class="turno-actions">
-        <button class="btn btn-info btn-sm" onclick="ponerEnPrep('${p.id}')">🍳 En prep.</button>
-        <button class="btn btn-danger btn-sm" onclick="cancelarPedido('${p.id}')">✖ Cancelar</button>
-      </div>
-    </div>`;
-  }).join('');
+  document.getElementById('cola-list').innerHTML = cola.length === 0
+    ? '<div class="cola-empty"><i class="fa-regular fa-circle-check"></i>Sin pedidos pendientes</div>'
+    : cola.map(p => {
+        const cls = p.estado === 'llamado' ? 'state-llamado' : p.estado === 'en_preparacion' ? 'state-prep' : '';
+        const items = p.items.map(i => `${i.nombre} ×${i.cantidad}`).join(' · ');
+        return `
+        <div class="turno-row ${cls}">
+          <div>
+            <div class="turno-num">${p.turno}</div>
+            <div class="turno-meta">${items}</div>
+            <div class="turno-meta" style="color:var(--info);margin-top:2px">
+              <i class="fa-regular fa-clock"></i> ~${p.tiempoEstimado} min &nbsp;·&nbsp; $${p.total.toLocaleString()}
+            </div>
+          </div>
+          <div class="turno-acts">
+            <button class="btn btn-info btn-sm" onclick="ponerEnPrep('${p.id}')">
+              <i class="fa-solid fa-fire-burner"></i>
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="cancelarPedido('${p.id}')">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>`;
+      }).join('');
 }
 
 function ponerEnPrep(id) {
   Store.actualizarEstadoPedido(id, 'en_preparacion');
   Canal.emitir(EVENTOS.PEDIDO_EN_PREP, { id });
-  renderCola();
-  toast('Pedido en preparación 🍳', 'success');
+  renderCola(); toast('En preparación', 'success');
 }
 
 function llamarSiguiente() {
-  const pendientes = Store.getPedidos().filter(p => p.estado === 'pendiente' || p.estado === 'en_preparacion');
-  if (pendientes.length === 0) { toast('No hay pedidos en cola', 'warning'); return; }
-
-  const pedido = pendientes[0];
-  _turnoActual = pedido;
-  Store.actualizarEstadoPedido(pedido.id, 'llamado');
-
-  document.getElementById('pantalla-num').textContent = pedido.turno;
-  document.getElementById('pantalla-num').classList.add('pulse');
-  document.getElementById('pantalla-sub').textContent = 'Pase a retirar por caja';
-
-  Canal.emitir(EVENTOS.TURNO_LLAMADO, { turno: pedido.turno, pedidoId: pedido.id });
-  renderCola();
-  toast(`🔊 Llamando turno ${pedido.turno}`, 'success');
+  const next = Store.getPedidos().find(p => ['pendiente','en_preparacion'].includes(p.estado));
+  if (!next) { toast('No hay pedidos en cola', 'warning'); return; }
+  _turnoActual = next;
+  Store.actualizarEstadoPedido(next.id, 'llamado');
+  const el = document.getElementById('pantalla-num');
+  el.textContent = next.turno;
+  el.classList.add('pulse');
+  document.getElementById('pantalla-msg').textContent = 'Pase a retirar por caja';
+  Canal.emitir(EVENTOS.TURNO_LLAMADO, { turno: next.turno, pedidoId: next.id });
+  renderCola(); toast(`Llamando turno ${next.turno}`, 'success');
 }
 
 function marcarEntregado() {
-  if (!_turnoActual) { toast('No hay turno activo', 'warning'); return; }
+  if (!_turnoActual) { toast('Sin turno activo', 'warning'); return; }
   Store.actualizarEstadoPedido(_turnoActual.id, 'entregado');
   Canal.emitir(EVENTOS.TURNO_COMPLETADO, { turno: _turnoActual.turno, pedidoId: _turnoActual.id });
-
   document.getElementById('pantalla-num').textContent = '—';
   document.getElementById('pantalla-num').classList.remove('pulse');
-  document.getElementById('pantalla-sub').textContent = 'Sin turno activo';
-  toast(`✅ Turno ${_turnoActual.turno} entregado`, 'success');
-  _turnoActual = null;
-  renderCola();
+  document.getElementById('pantalla-msg').textContent = 'Sin turno activo';
+  toast(`Turno ${_turnoActual.turno} entregado`, 'success');
+  _turnoActual = null; renderCola();
 }
 
 function cancelarTurnoActual() {
-  if (!_turnoActual) { toast('No hay turno activo', 'warning'); return; }
+  if (!_turnoActual) { toast('Sin turno activo', 'warning'); return; }
   cancelarPedido(_turnoActual.id);
   document.getElementById('pantalla-num').textContent = '—';
-  document.getElementById('pantalla-sub').textContent = 'Sin turno activo';
+  document.getElementById('pantalla-num').classList.remove('pulse');
+  document.getElementById('pantalla-msg').textContent = 'Sin turno activo';
   _turnoActual = null;
 }
 
 function cancelarPedido(id) {
   const p = Store.getPedidos().find(x => x.id === id);
   if (!p) return;
-  // Reponer stock
-  p.items.forEach(item => Store.actualizarStock(item.productoId, item.cantidad));
+  p.items.forEach(i => Store.actualizarStock(i.productoId, i.cantidad));
   Store.actualizarEstadoPedido(id, 'cancelado');
   Canal.emitir(EVENTOS.TURNO_CANCELADO, { turno: p.turno, pedidoId: id });
   Canal.emitir(EVENTOS.STOCK_ACTUALIZADO, Store.getMenu());
-  renderCola();
-  toast(`❌ Turno ${p.turno} cancelado`, 'warning');
+  renderCola(); toast(`Turno ${p.turno} cancelado`, 'warning');
 }
 
 function resetearTurnos() {
-  if (!confirm('¿Resetear el contador de turnos? Empieza desde A-001.')) return;
-  Store.resetTurnos();
-  toast('Turnos reseteados 🔄');
+  if (!confirm('¿Resetear el contador de turnos?')) return;
+  Store.resetTurnos(); toast('Turnos reseteados');
 }
 
 // ═══════════════════════════════════════════════════════
-// SECCIÓN HISTORIAL
+// HISTORIAL
 // ═══════════════════════════════════════════════════════
 function renderHistorial() {
-  const pedidos   = Store.getPedidos();
+  const pedidos    = Store.getPedidos();
   const entregados = pedidos.filter(p => p.estado === 'entregado');
   const cancelados = pedidos.filter(p => p.estado === 'cancelado');
-  const total      = entregados.reduce((s, p) => s + p.total, 0);
+  const ingresos   = entregados.reduce((s, p) => s + p.total, 0);
 
   document.getElementById('historial-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-val">${pedidos.length}</div><div class="stat-lbl">Total pedidos</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--success)">${entregados.length}</div><div class="stat-lbl">Entregados</div></div>
-    <div class="stat-card"><div class="stat-val" style="color:var(--danger)">${cancelados.length}</div><div class="stat-lbl">Cancelados</div></div>
-    <div class="stat-card"><div class="stat-val">$${total.toLocaleString()}</div><div class="stat-lbl">Ingresos del día</div></div>
-  `;
+    <div class="stat-card"><div class="stat-value">${pedidos.length}</div><div class="stat-label">Total pedidos</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--success)">${entregados.length}</div><div class="stat-label">Entregados</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${cancelados.length}</div><div class="stat-label">Cancelados</div></div>
+    <div class="stat-card"><div class="stat-value">$${ingresos.toLocaleString()}</div><div class="stat-label">Ingresos</div></div>`;
 
-  const tbody = document.getElementById('tabla-historial');
-  if (pedidos.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:30px">Sin pedidos hoy</td></tr>';
-    return;
-  }
-  tbody.innerHTML = [...pedidos].reverse().map(p => {
-    const hora     = new Date(p.creadoEn).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-    const items    = p.items.map(i => `${i.nombre} x${i.cantidad}`).join(', ');
-    const estadoMap = {
-      pendiente:        '<span class="badge badge-warning">⏳ Pendiente</span>',
-      en_preparacion:   '<span class="badge badge-info">🍳 En prep.</span>',
-      llamado:          '<span class="badge badge-info">🔊 Llamado</span>',
-      entregado:        '<span class="badge badge-success">✅ Entregado</span>',
-      cancelado:        '<span class="badge badge-danger">❌ Cancelado</span>'
-    };
-    return `<tr>
-      <td><strong>${p.turno}</strong></td>
-      <td>${hora}</td>
-      <td style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${items}">${items}</td>
-      <td>⏱️ ${p.tiempoEstimado} min</td>
-      <td><strong>$${p.total.toLocaleString()}</strong></td>
-      <td>${estadoMap[p.estado] || p.estado}</td>
-    </tr>`;
-  }).join('');
+  const estadoBadge = {
+    pendiente:      '<span class="badge badge-warning">Pendiente</span>',
+    en_preparacion: '<span class="badge badge-info">En prep.</span>',
+    llamado:        '<span class="badge badge-info">Llamado</span>',
+    entregado:      '<span class="badge badge-success">Entregado</span>',
+    cancelado:      '<span class="badge badge-danger">Cancelado</span>'
+  };
+
+  document.getElementById('tabla-historial').innerHTML = pedidos.length === 0
+    ? '<tr><td colspan="6" style="text-align:center;padding:36px;color:var(--muted)">Sin pedidos hoy</td></tr>'
+    : [...pedidos].reverse().map(p => {
+        const hora  = new Date(p.creadoEn).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+        const items = p.items.map(i => `${i.nombre} ×${i.cantidad}`).join(', ');
+        return `<tr>
+          <td><strong>${p.turno}</strong></td>
+          <td>${hora}</td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${items}">${items}</td>
+          <td>${p.tiempoEstimado} min</td>
+          <td><strong>$${p.total.toLocaleString()}</strong></td>
+          <td>${estadoBadge[p.estado] || p.estado}</td>
+        </tr>`;
+      }).join('');
 }
 
-// ── BROADCAST CHANNEL LISTENERS ───────────────────────
+// ─── BROADCAST ───────────────────────────────────────
 Canal.escuchar(EVENTOS.NUEVO_PEDIDO, pedido => {
   renderCola();
-  toast(`🎫 Nuevo pedido: ${pedido.turno}`, 'success');
+  toast(`Nuevo pedido: ${pedido.turno}`, 'success');
 });
 
-// ── INICIALIZAR ───────────────────────────────────────
-renderMenu();
-renderStock();
-renderCola();
+// ─── INIT ─────────────────────────────────────────────
+renderMenu(); renderStock(); renderCola();
 </script>
 </body>
 </html>
