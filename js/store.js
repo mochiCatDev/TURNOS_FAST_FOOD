@@ -1,143 +1,121 @@
-/* ==========================================================
-   store.js — Capa de acceso a datos (localStorage)
-   FastTurno — Sin backend, sin framework
-   ========================================================== */
-const Store = (() => {
-  const K = {
-    MENU:     'sft_menu',
-    PEDIDOS:  'sft_pedidos',
-    CONFIG:   'sft_config',
-    USUARIOS: 'sft_usuarios',
-  };
+/* ============================================================
+   FastTurno — Store (Gestión de Persistencia Local)
+   ============================================================ */
 
-  const get = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
-  const set = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+const STORE_KEYS = {
+  MENU: 'fastturno_menu',
+  PEDIDOS: 'fastturno_pedidos',
+  USUARIOS: 'fastturno_usuarios',
+  SESION: 'fastturno_sesion',
+};
 
-  /* ── MENÚ ─────────────────────────────────────────── */
-  const getMenu   = ()  => get(K.MENU) || [];
-  const saveMenu  = m   => set(K.MENU, m);
-  const guardarMenu = m => set(K.MENU, m);   // alias usado en admin.html
+const Store = {
+  seedInicial() {
+    // Forzar actualización borrando menú anterior si es necesario probar cambios
+    localStorage.removeItem(STORE_KEYS.MENU);
 
-  const getProducto = id => getMenu().find(p => p.id == id);
+    if (!localStorage.getItem(STORE_KEYS.MENU)) {
+      const menuInicial = [
+        { id: 1, nombre: "Combo Fast Deluxe", categoria: "combos", precio: 8.50, stock: 30, descripcion: "Doble carne, cheddar, bacon, papas grandes y gaseosa a elección." },
+        { id: 2, nombre: "Combo Clásico", categoria: "combos", precio: 6.50, stock: 45, descripcion: "Hamburguesa clásica con queso, papas medianas y bebida." },
+        { id: 3, nombre: "Combo Crispy Chicken", categoria: "combos", precio: 7.20, stock: 25, descripcion: "Pollo crocante, lechuga, mayo especial, papas y bebida." },
+        { id: 4, nombre: "Hamburguesa Deluxe Doble", categoria: "hamburguesas", precio: 5.50, stock: 50, descripcion: "Doble medalla de carne, cheddar fundido y bacon crocante." },
+        { id: 5, nombre: "Hamburguesa Clásica", categoria: "hamburguesas", precio: 3.80, stock: 60, descripcion: "Carne 100% vacuna, queso cheddar, lechuga y tomate." },
+        { id: 6, nombre: "Crispy Chicken Sándwich", categoria: "hamburguesas", precio: 4.50, stock: 35, descripcion: "Medalla de pollo rebozada súper crocante con aderezo casero." },
+        { id: 7, nombre: "Papas Fritas Medianas", categoria: "acompañamientos", precio: 1.80, stock: 80, descripcion: "Papas bastón doradas y crujientes." },
+        { id: 8, nombre: "Papas con Cheddar y Bacon", categoria: "acompañamientos", precio: 2.80, stock: 40, descripcion: "Porción de papas cubierta con cheddar derretido y panceta." },
+        { id: 9, nombre: "Nuggets de Pollo (6 u.)", categoria: "acompañamientos", precio: 2.50, stock: 50, descripcion: "Bocadillos de pollo empanados acompañados con salsa barbacoa." },
+        { id: 10, nombre: "Gaseosa 500ml", categoria: "bebidas", precio: 1.50, stock: 100, descripcion: "Línea Coca-Cola / Sprite / Fanta bien fría." },
+        { id: 11, nombre: "Agua Mineral 500ml", categoria: "bebidas", precio: 1.00, stock: 60, descripcion: "Agua mineral sin gas." },
+        { id: 12, nombre: "Helado Sundae Chocolatoso", categoria: "postres", precio: 1.80, stock: 30, descripcion: "Helado cremoso de vainilla con salsa de chocolate caliente." }
+      ];
+      this.guardarMenu(menuInicial);
+    }
 
-  const agregarProducto = p => {
-    const menu = getMenu();
-    if (!p.id) p.id = Date.now();
-    menu.push(p);
-    saveMenu(menu);
-    return p;
-  };
+    // Usuario Administrador por defecto
+    if (!localStorage.getItem(STORE_KEYS.USUARIOS)) {
+      const usuariosIniciales = [
+        { id: 1, nombre: "Administrador", usuario: "admin", pass: "admin123", rol: "admin" }
+      ];
+      this.guardarUsuarios(usuariosIniciales);
+    }
+  },
 
-  const actualizarProducto = (id, datos) => {
-    saveMenu(getMenu().map(p => p.id == id ? { ...p, ...datos } : p));
-  };
+  /* --- MÉTODOS DEL MENÚ --- */
+  getMenu() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEYS.MENU)) || []; } catch (e) { return []; }
+  },
 
-  const eliminarProducto = id => saveMenu(getMenu().filter(p => p.id != id));
+  guardarMenu(menu) {
+    localStorage.setItem(STORE_KEYS.MENU, JSON.stringify(menu));
+  },
 
-  const actualizarStock = (id, delta) => {
-    saveMenu(getMenu().map(p => {
-      if (p.id != id) return p;
-      const stock = Math.max(0, (p.stock || 0) + delta);
-      return { ...p, stock, disponible: stock > 0 };
-    }));
-  };
+  actualizarStock(idProducto, cantidadAjuste) {
+    const menu = this.getMenu();
+    const prod = menu.find(p => p.id === idProducto);
+    if (prod) {
+      prod.stock = Math.max(0, (prod.stock || 0) + cantidadAjuste);
+      this.guardarMenu(menu);
+    }
+  },
 
-  /* ── PEDIDOS ──────────────────────────────────────── */
-  const getPedidos    = ()  => get(K.PEDIDOS) || [];
-  const guardarPedidos = lista => set(K.PEDIDOS, lista);
+  /* --- MÉTODOS DE PEDIDOS --- */
+  getPedidos() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEYS.PEDIDOS)) || []; } catch (e) { return []; }
+  },
 
-  const savePedido = pedido => {
-    const pedidos = getPedidos();
-    pedido.id     = Date.now();
-    pedido.turno  = _generarTurno();
-    pedido.fecha  = new Date().toISOString();
-    pedido.estado = 'pendiente';
-    pedidos.push(pedido);
-    set(K.PEDIDOS, pedidos);
-    return pedido;
-  };
+  guardarPedidos(pedidos) {
+    localStorage.setItem(STORE_KEYS.PEDIDOS, JSON.stringify(pedidos));
+  },
 
-  const actualizarEstadoPedido = (id, estado) => {
-    set(K.PEDIDOS, getPedidos().map(p =>
-      p.id == id ? { ...p, estado, actualizadoEn: new Date().toISOString() } : p
-    ));
-  };
+  savePedido(datosPedido) {
+    const pedidos = this.getPedidos();
+    const ultimoTurno = pedidos.length > 0 ? Math.max(...pedidos.map(p => p.turno || 0)) : 100;
+    
+    const nuevoPedido = {
+      id: Date.now(),
+      turno: ultimoTurno + 1,
+      fecha: new Date().toISOString(),
+      estado: datosPedido.estado || 'pendiente',
+      items: datosPedido.items || [],
+      total: datosPedido.total || 0,
+    };
 
-  /* ── TURNOS ───────────────────────────────────────── */
-  const getConfig = () => get(K.CONFIG) || { contador: 0, prefijo: 'A' };
+    pedidos.push(nuevoPedido);
+    this.guardarPedidos(pedidos);
+    return nuevoPedido;
+  },
 
-  const _generarTurno = () => {
-    const cfg = getConfig();
-    cfg.contador++;
-    set(K.CONFIG, cfg);
-    return `${cfg.prefijo}-${String(cfg.contador).padStart(3, '0')}`;
-  };
+  /* --- MÉTODOS DE USUARIOS --- */
+  getUsuarios() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEYS.USUARIOS)) || []; } catch (e) { return []; }
+  },
 
-  const resetTurnos = () => {
-    const cfg = getConfig();
-    cfg.contador = 0;
-    set(K.CONFIG, cfg);
-  };
+  guardarUsuarios(usuarios) {
+    localStorage.setItem(STORE_KEYS.USUARIOS, JSON.stringify(usuarios));
+  },
 
-  /* ── USUARIOS ─────────────────────────────────────── */
-  const getUsuarios = () => get(K.USUARIOS) || [];
-  const validarCredenciales = (usuario, password) =>
-    getUsuarios().find(u => u.usuario === usuario && u.password === password) || null;
+  existeUsuario(nombreUsuario) {
+    const usuarios = this.getUsuarios();
+    return usuarios.some(u => u.usuario.toLowerCase() === nombreUsuario.toLowerCase());
+  },
 
-  // Verifica si un nombre de usuario ya existe (usado en Auth.registrar)
-  const existeUsuario = usuario =>
-    getUsuarios().some(u => u.usuario.toLowerCase() === usuario.toLowerCase());
+  validarCredenciales(usuario, password) {
+    const usuarios = this.getUsuarios();
+    return usuarios.find(u => u.usuario.toLowerCase() === usuario.toLowerCase() && u.pass === password) || null;
+  },
 
-  // Crea y persiste un nuevo usuario (usado en Auth.registrar)
-  const registrarUsuario = (nombre, usuario, password, rol = 'kiosco') => {
-    const usuarios = getUsuarios();
-    const nuevoUsuario = { id: Date.now(), nombre, usuario, password, rol };
+  registrarUsuario(nombre, usuario, password, rol = 'cliente') {
+    const usuarios = this.getUsuarios();
+    const nuevoUsuario = {
+      id: Date.now(),
+      nombre,
+      usuario,
+      pass: password,
+      rol
+    };
     usuarios.push(nuevoUsuario);
-    set(K.USUARIOS, usuarios);
+    this.guardarUsuarios(usuarios);
     return nuevoUsuario;
-  };
-
-  /* ── SEED de datos iniciales ──────────────────────── */
-  const seedInicial = () => {
-    if (!get(K.USUARIOS)) {
-      set(K.USUARIOS, [
-        { id: 1, nombre: 'Administrador', usuario: 'admin',  password: 'admin123',  rol: 'admin' },
-        { id: 2, nombre: 'Kiosco 1',      usuario: 'kiosco', password: 'kiosco123', rol: 'kiosco' },
-      ]);
-    }
-    if (!get(K.MENU)) {
-      set(K.MENU, [
-        { id: 101, nombre: 'Combo Clasico',     descripcion: 'Hamburguesa + papas + bebida',       precio: 1200, categoria: 'combos',          stock: 20 },
-        { id: 102, nombre: 'Combo BBQ',          descripcion: 'Hamburguesa BBQ + papas + bebida',   precio: 1450, categoria: 'combos',          stock: 15 },
-        { id: 103, nombre: 'Combo Pollo',        descripcion: 'Sandwich de pollo + papas + bebida', precio: 1300, categoria: 'combos',          stock: 10 },
-        { id: 104, nombre: 'Hamburguesa Simple', descripcion: 'Hamburguesa clasica con todo',       precio: 750,  categoria: 'hamburguesas',    stock: 25 },
-        { id: 105, nombre: 'Hamburguesa Doble',  descripcion: 'Doble medallon + queso + lechuga',   precio: 950,  categoria: 'hamburguesas',    stock: 20 },
-        { id: 106, nombre: 'Papas Grandes',      descripcion: 'Porcion grande de papas fritas',     precio: 400,  categoria: 'acompañamientos', stock: 30 },
-        { id: 107, nombre: 'Papas Chicas',       descripcion: 'Porcion chica de papas fritas',      precio: 280,  categoria: 'acompañamientos', stock: 30 },
-        { id: 108, nombre: 'Coca-Cola 500ml',    descripcion: 'Bebida cola 500ml',                  precio: 350,  categoria: 'bebidas',         stock: 50 },
-        { id: 109, nombre: 'Agua 500ml',         descripcion: 'Agua mineral 500ml',                 precio: 200,  categoria: 'bebidas',         stock: 40 },
-        { id: 110, nombre: 'Postre del dia',     descripcion: 'Consulte disponibilidad',            precio: 500,  categoria: 'postres',         stock: 8  },
-      ]);
-    }
-    if (!get(K.CONFIG))  set(K.CONFIG,  { contador: 0, prefijo: 'A' });
-    if (!get(K.PEDIDOS)) set(K.PEDIDOS, []);
-  };
-
-  /* ── API pública ──────────────────────────────────── */
-  return {
-    // Menú
-    getMenu, saveMenu, guardarMenu,
-    getProducto, agregarProducto, actualizarProducto, eliminarProducto, actualizarStock,
-    // Pedidos
-    getPedidos, savePedido, guardarPedidos, actualizarEstadoPedido,
-    // Config / turnos
-    getConfig, resetTurnos,
-    // Usuarios
-    getUsuarios, validarCredenciales, existeUsuario, registrarUsuario,
-    // Inicialización
-    seedInicial,
-  };
-})();
-
-// Ejecutar seed al cargar (solo si no hay datos previos)
-Store.seedInicial();
+  }
+};
