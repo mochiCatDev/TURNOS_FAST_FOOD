@@ -1,137 +1,319 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FastTurno - Pantalla</title>
+  <title>Pantalla de Turnos — FastTurno</title>
   <link rel="icon" type="image/png" href="assets/img/icon.png" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Adaptaciones para pantalla TV siempre visible */
+    html, body { height: 100%; overflow: hidden; }
+    body { background: var(--charcoal); }
+
+    .display-page {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Animación de entrada del número */
+    @keyframes num-pop {
+      0%   { transform: scale(.85); opacity: 0; }
+      60%  { transform: scale(1.04); }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+    .number-animate {
+      animation: num-pop .35s cubic-bezier(.34,1.56,.64,1) both;
+    }
+
+    /* Columna de cola: scroll automático */
+    .display-queue-list {
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .display-queue-list::-webkit-scrollbar { display: none; }
+
+    /* Texto grande en la marca */
+    .display-header .brand { font-size: 1.3rem; }
+
+    @media (max-width: 700px) {
+      .display-main { grid-template-columns: 1fr; }
+      .display-queue { display: none; }
+      .display-now .number-big { font-size: 6rem; }
+    }
+  </style>
 </head>
-
 <body>
-  <div class="display-page">
 
-    <!-- HEADER -->
-    <header class="display-header">
-      <div class="display-brand">
-        <i class="fa-solid fa-burger"></i> FastTurno
+<div class="display-page">
+
+  <!-- HEADER -->
+  <div class="display-header">
+    <div class="brand">
+      <i class="fa-solid fa-burger"></i>
+      <span>FastTurno</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:1.25rem;">
+      <div class="connected-badge">
+        <span class="dot"></span>
+        <span id="connStatus">Conectado</span>
       </div>
-      <span style="font-size:.75rem;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase">Pantalla de
-        Turnos</span>
-      <div class="display-clock" id="reloj">00:00:00</div>
-    </header>
-
-    <!-- BODY -->
-    <div class="display-body">
-
-      <!-- TURNO ACTIVO -->
-      <div class="display-col">
-        <div class="display-col-label">
-          <i class="fa-solid fa-volume-high"></i> Turno en curso
-        </div>
-        <div class="active-turn" id="active-turn">
-          <div class="at-idle">
-            <i class="fa-regular fa-clock"></i>
-            <span>Esperando pedidos...</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- COLA -->
-      <div class="display-col">
-        <div class="display-col-label">
-          <i class="fa-solid fa-list-ul"></i> Cola de pedidos
-        </div>
-        <div class="queue-list" id="queue-list">
-          <div class="queue-empty">
-            <i class="fa-regular fa-circle-check"></i>
-            <span>Sin pedidos en cola</span>
-          </div>
-        </div>
-      </div>
-
+      <div class="clock" id="reloj">--:--:--</div>
     </div>
   </div>
 
-  <script src="js/store.js"></script>
-  <script src="js/channel.js"></script>
-  <script>
-    // ─── RELOJ ────────────────────────────────────────────
-    setInterval(() => {
-      document.getElementById('reloj').textContent =
-        new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    }, 1000);
+  <!-- MAIN -->
+  <div class="display-main" style="flex:1; overflow:hidden;">
 
-    // ─── AUDIO ───────────────────────────────────────────
-    function beep() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        [523.25, 659.25, 783.99].forEach((freq, i) => {
-          const o = ctx.createOscillator(), g = ctx.createGain();
-          o.connect(g); g.connect(ctx.destination);
-          o.frequency.value = freq; o.type = 'sine';
-          const t = ctx.currentTime + i * .18;
-          g.gain.setValueAtTime(.32, t);
-          g.gain.exponentialRampToValueAtTime(.001, t + .38);
-          o.start(t); o.stop(t + .38);
+    <!-- Turno llamado -->
+    <div class="display-now">
+      <div class="label-calling">
+        <i class="fa-solid fa-volume-high fa-sm"></i>
+        Turno en ventanilla
+      </div>
+      <div class="number-big" id="numBig">---</div>
+      <div class="status-text" id="statusText">
+        <i class="fa-regular fa-clock fa-sm"></i>
+        Esperando pedidos...
+      </div>
+    </div>
+
+    <!-- Cola de turnos -->
+    <div class="display-queue">
+      <div class="display-queue-header">
+        <i class="fa-solid fa-list-ol fa-sm"></i>
+        Cola de turnos
+      </div>
+      <div class="display-queue-list" id="queueList">
+        <!-- Generado por JS -->
+        <div style="padding:1.5rem; text-align:center; color:var(--charcoal-3); font-size:.9rem;">
+          Sin turnos en espera
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /display-main -->
+
+  <!-- FOOTER -->
+  <div class="display-footer">
+    <i class="fa-solid fa-circle-info fa-sm"></i>
+    <span>Cuando tu número aparezca en pantalla, acércate a la ventanilla a retirar tu pedido.</span>
+    <span style="margin-left:auto; font-size:.75rem; opacity:.6;" id="footerDate"></span>
+  </div>
+
+</div>
+
+<!-- ===================== SCRIPTS ===================== -->
+<script src="js/store.js"></script>
+<script src="js/channel.js"></script>
+<script>
+/* ============================================================
+   Estado de la pantalla
+   ============================================================ */
+const DISPLAY = {
+  broadcast: null,
+  turnoActual: null,
+  cola: [],
+};
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  DISPLAY.broadcast = Channel.getInstance();
+  DISPLAY.broadcast.addEventListener('message', onMessage);
+
+  // Cargar estado inicial desde localStorage
+  cargarEstadoInicial();
+
+  // Reloj
+  actualizarReloj();
+  setInterval(actualizarReloj, 1000);
+
+  // Fecha footer
+  const hoy = new Date().toLocaleDateString('es-AR', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  });
+  document.getElementById('footerDate').textContent = capitalizar(hoy);
+});
+
+function cargarEstadoInicial() {
+  const pedidos = Store.getPedidos ? Store.getPedidos() : [];
+  // Excluir solo cancelados; los entregados sí se muestran (al final de la cola)
+  DISPLAY.cola = pedidos
+    .filter(p => p.estado !== 'cancelado')
+    .slice(-20);
+
+  // Buscar el turno llamado más reciente
+  const llamado = [...pedidos].reverse().find(p => p.estado === 'listo' || p.estado === 'llamado');
+  if (llamado) {
+    mostrarTurno(llamado.turno, 'Pase a retirar su pedido.');
+  }
+
+  renderCola();
+}
+
+/* ============================================================
+   BROADCAST CHANNEL
+   ============================================================ */
+function onMessage(e) {
+  const { evento, datos } = e.data || {};
+  switch (evento) {
+    case EVENTOS.TURNO_LLAMADO:
+      mostrarTurno(datos?.numero ?? datos?.turno, 'Pase a retirar su pedido.');
+      actualizarCola(datos);
+      break;
+    case EVENTOS.TURNO_COMPLETADO:
+      actualizarCola(datos);
+      break;
+    case EVENTOS.TURNO_CANCELADO:
+      actualizarCola(datos);
+      break;
+    case EVENTOS.NUEVO_PEDIDO:
+      // Agregar a la cola
+      if (datos?.turno) {
+        DISPLAY.cola.push({
+          turno: datos.turno,
+          estado: 'pendiente',
+          items: datos.items || [],
         });
-      } catch (e) { }
-    }
+        renderCola();
+      }
+      break;
+    case EVENTOS.PEDIDO_EN_PREP:
+      // Actualizar estado en cola
+      actualizarCola(datos);
+      break;
+    case EVENTOS.MENU_ACTUALIZADO:
+    case EVENTOS.STOCK_ACTUALIZADO:
+      // Solo interesa para sincronizar, no afecta la display
+      break;
+  }
+}
 
-    // ─── TURNO ACTIVO ─────────────────────────────────────
-    function mostrarTurno(turno) {
-      document.getElementById('active-turn').innerHTML = `
-    <div class="at-icon"><i class="fa-solid fa-volume-high"></i></div>
-    <div class="at-num anim" id="at-num">${turno}</div>
-    <div class="at-msg">Pase a retirar por caja</div>`;
-      beep();
-      setTimeout(() => document.getElementById('at-num')?.classList.remove('anim'), 3000);
-    }
+function actualizarCola(datos) {
+  const pedidos = Store.getPedidos ? Store.getPedidos() : [];
+  // Excluir solo cancelados; los entregados sí se muestran (al final de la cola)
+  DISPLAY.cola = pedidos
+    .filter(p => p.estado !== 'cancelado')
+    .slice(-20);
+  renderCola();
+}
 
-    function clearTurno() {
-      document.getElementById('active-turn').innerHTML =
-        '<div class="at-idle"><i class="fa-regular fa-clock"></i><span>Esperando pedidos...</span></div>';
-    }
-
-    // ─── COLA ─────────────────────────────────────────────
-    function renderCola() {
-      const pedidos = Store.getPedidos().filter(p => ['pendiente', 'en_preparacion', 'llamado'].includes(p.estado));
-      const el = document.getElementById('queue-list');
-      el.innerHTML = pedidos.length === 0
-        ? '<div class="queue-empty"><i class="fa-regular fa-circle-check"></i><span>Sin pedidos en cola</span></div>'
-        : pedidos.map(p => {
-          const cls = p.estado === 'llamado' ? 'q-ready' : p.estado === 'en_preparacion' ? 'q-prep' : '';
-          const badgeCls = p.estado === 'llamado' ? 'qb-ready' : p.estado === 'en_preparacion' ? 'qb-prep' : 'qb-wait';
-          const badgeTxt = p.estado === 'llamado' ? 'Llamado' : p.estado === 'en_preparacion' ? 'En prep.' : 'Esperando';
-          return `
-        <div class="queue-item ${cls}">
-          <span class="queue-num">${p.turno}</span>
-          <div class="queue-right">
-            <span class="queue-badge ${badgeCls}">${badgeTxt}</span>
-            <span class="queue-time"><i class="fa-regular fa-clock"></i> ~${p.tiempoEstimado} min</span>
-          </div>
-        </div>`;
-        }).join('');
-    }
-
-    // ─── BROADCAST ────────────────────────────────────────
-    Canal.escuchar(EVENTOS.NUEVO_PEDIDO, () => renderCola());
-    Canal.escuchar(EVENTOS.PEDIDO_EN_PREP, () => renderCola());
-    Canal.escuchar(EVENTOS.TURNO_CANCELADO, ({ turno }) => {
-      const el = document.getElementById('at-num');
-      if (el && el.textContent === turno) clearTurno();
-      renderCola();
+/* ============================================================
+   AUDIO — beep al llamar turno
+   ============================================================ */
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [523.25, 659.25, 783.99].forEach((freq, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq; o.type = 'sine';
+      const t = ctx.currentTime + i * .18;
+      g.gain.setValueAtTime(.32, t);
+      g.gain.exponentialRampToValueAtTime(.001, t + .38);
+      o.start(t); o.stop(t + .38);
     });
-    Canal.escuchar(EVENTOS.TURNO_COMPLETADO, () => { clearTurno(); renderCola(); });
-    Canal.escuchar(EVENTOS.TURNO_LLAMADO, ({ turno }) => { mostrarTurno(turno); renderCola(); });
+  } catch (e) { /* silencioso si no hay AudioContext */ }
+}
 
-    // ─── INIT ─────────────────────────────────────────────
-    renderCola();
-    const activo = Store.getPedidos().find(p => p.estado === 'llamado');
-    if (activo) mostrarTurno(activo.turno);
-  </script>
+/* ============================================================
+   RENDERIZAR TURNO LLAMADO
+   ============================================================ */
+function mostrarTurno(numero, texto) {
+  DISPLAY.turnoActual = numero;
+
+  beep();
+  const el = document.getElementById('numBig');
+  el.textContent = numero;
+  el.classList.remove('number-animate');
+  // forzar reflow para reiniciar animación
+  void el.offsetWidth;
+  el.classList.add('number-animate');
+
+  const st = document.getElementById('statusText');
+  st.innerHTML = `<i class="fa-solid fa-check-circle fa-sm" style="color:#4ade80;"></i> ${texto}`;
+}
+
+/* ============================================================
+   RENDERIZAR COLA
+   ============================================================ */
+function renderCola() {
+  const el = document.getElementById('queueList');
+  if (!el) return;
+
+  const items = DISPLAY.cola;
+  if (!items.length) {
+    el.innerHTML = `<div style="padding:1.5rem; text-align:center; color:var(--charcoal-3); font-size:.9rem;">
+      <i class="fa-solid fa-hourglass"></i><br>Sin turnos en espera
+    </div>`;
+    return;
+  }
+
+  // Ordenar: activos primero (pendiente / en prep / listo / llamado), entregados al final
+  const ordenEstado = { pendiente: 0, 'en prep': 1, listo: 2, llamado: 3, entregado: 4 };
+  const itemsOrdenados = items.slice().sort((a, b) => {
+    const oa = ordenEstado[a.estado] ?? 0;
+    const ob = ordenEstado[b.estado] ?? 0;
+    if (oa !== ob) return ob - oa; // dentro del mismo grupo, más recientes primero
+    return b.turno - a.turno;
+  });
+
+  el.innerHTML = '';
+  itemsOrdenados.forEach(p => {
+    const esCurrent    = p.turno == DISPLAY.turnoActual;
+    const esPrep       = p.estado === 'en prep';
+    const esEntregado  = p.estado === 'entregado';
+    const div = document.createElement('div');
+    div.className = 'display-queue-item' +
+      (esCurrent || p.estado === 'listo' || p.estado === 'llamado' ? ' dq-active' : '') +
+      (esEntregado ? ' dq-done' : '');
+
+    let etiqueta;
+    if (esEntregado)        etiqueta = 'Entregado';
+    else if (esPrep)        etiqueta = 'En preparación';
+    else if (p.estado === 'listo')   etiqueta = 'Listo';
+    else if (p.estado === 'llamado') etiqueta = 'Llamado';
+    else                    etiqueta = 'Esperando';
+
+    div.innerHTML = `
+      <span class="dq-num">#${p.turno}</span>
+      <span class="dq-desc">
+        ${(p.items || []).length} prod. — ${etiqueta}
+      </span>
+      ${esEntregado
+        ? '<i class="fa-solid fa-check" style="color:#4ade80; font-size:.85rem;"></i>'
+        : esCurrent
+          ? '<i class="fa-solid fa-volume-high" style="color:var(--amber-light); font-size:.85rem;"></i>'
+          : ''}
+    `;
+    el.appendChild(div);
+  });
+}
+
+/* ============================================================
+   RELOJ
+   ============================================================ */
+function actualizarReloj() {
+  const ahora = new Date();
+  const h = String(ahora.getHours()).padStart(2,'0');
+  const m = String(ahora.getMinutes()).padStart(2,'0');
+  const s = String(ahora.getSeconds()).padStart(2,'0');
+  const el = document.getElementById('reloj');
+  if (el) el.textContent = `${h}:${m}:${s}`;
+}
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+function capitalizar(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+</script>
 </body>
-
 </html>

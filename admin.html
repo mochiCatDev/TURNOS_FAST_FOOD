@@ -3,518 +3,1091 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FastTurno — Admin</title>
+  <title>Administración — FastTurno</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Ajustes internos admin */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: .75rem;
+      margin-bottom: 1.25rem;
+    }
+    .section-header h2 {
+      display: flex; align-items: center; gap: .5rem;
+      font-size: 1.1rem;
+    }
+    .section-header h2 i { color: var(--amber); }
+    .stock-badge-ok   { background:var(--success-bg); color:var(--success); }
+    .stock-badge-low  { background:var(--warning-bg); color:var(--warning); }
+    .stock-badge-out  { background:var(--danger-bg);  color:var(--danger);  }
+  </style>
 </head>
 <body>
+
 <div class="app-layout">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar" aria-label="Navegación lateral">
     <div class="sidebar-brand">
-      <i class="fa-solid fa-burger"></i> FastTurno
+      <div class="brand-icon"><i class="fa-solid fa-burger"></i></div>
+      <div>
+        <div class="brand-name">FastTurno</div>
+        <div class="brand-role">Panel de Administración</div>
+      </div>
     </div>
-    <nav class="sidebar-nav">
-      <div class="nav-item active" data-sec="menu">
-        <i class="fa-solid fa-utensils"></i> Menú
-      </div>
-      <div class="nav-item" data-sec="stock">
-        <i class="fa-solid fa-boxes-stacked"></i> Stock
-      </div>
-      <div class="nav-item" data-sec="caja">
-        <i class="fa-solid fa-ticket"></i> Caja
-        <span class="nav-badge" id="badge-cola">0</span>
-      </div>
-      <div class="nav-item" data-sec="historial">
-        <i class="fa-solid fa-chart-bar"></i> Historial
-      </div>
+
+    <nav class="sidebar-nav" aria-label="Menú principal">
+      <ul>
+        <li class="nav-section">Gestión</li>
+        <li>
+          <a href="#" class="active" data-panel="menu" onclick="irASeccion('menu', this)">
+            <i class="fa-solid fa-utensils"></i> Menú y Productos
+          </a>
+        </li>
+        <li>
+          <a href="#" data-panel="stock" onclick="irASeccion('stock', this)">
+            <i class="fa-solid fa-boxes-stacked"></i> Control de Stock
+          </a>
+        </li>
+        <li class="nav-section">Operaciones</li>
+        <li>
+          <a href="#" data-panel="caja" onclick="irASeccion('caja', this)">
+            <i class="fa-solid fa-cash-register"></i> Caja / Turnos
+          </a>
+        </li>
+        <li>
+          <a href="#" data-panel="historial" onclick="irASeccion('historial', this)">
+            <i class="fa-solid fa-clock-rotate-left"></i> Historial de Pedidos
+          </a>
+        </li>
+        <li class="nav-section">Sistema</li>
+        <li>
+          <a href="display.html" target="_blank">
+            <i class="fa-solid fa-display"></i> Pantalla TV
+            <i class="fa-solid fa-arrow-up-right-from-square fa-xs"
+               style="margin-left:auto; font-size:.65rem; color:var(--text-light);"></i>
+          </a>
+        </li>
+      </ul>
     </nav>
+
     <div class="sidebar-footer">
-      <div class="sidebar-user">
-        <div class="user-avatar" id="user-initials">A</div>
-        <div class="user-info">
-          <strong id="user-nombre">Admin</strong>
-          <span>Administrador</span>
-        </div>
-      </div>
-      <button class="btn btn-ghost btn-block btn-sm" onclick="Auth.logout()">
-        <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión
+      <div><i class="fa-solid fa-user-tie fa-sm"></i> <span id="adminUser">Admin</span></div>
+      <button class="logout-btn" onclick="cerrarSesion()">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
       </button>
     </div>
   </aside>
 
-  <!-- MAIN -->
-  <div class="main">
+  <!-- Overlay para cerrar sidebar en mobile -->
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="cerrarSidebar()"></div>
 
-    <!-- TOPBAR dinámico -->
-    <div class="topbar">
-      <div>
-        <h2 id="topbar-title">Gestión de Menú</h2>
-        <p id="topbar-sub">Administrá los productos disponibles</p>
+  <!-- ===================== CONTENIDO PRINCIPAL ===================== -->
+  <div class="main-content">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <!-- Hamburger: solo desktop (en mobile lo reemplaza el bottom nav) -->
+      <button class="hamburger" id="hamburgerBtn" onclick="abrirSidebar()"
+        aria-label="Abrir menú lateral">
+        <i class="fa-solid fa-bars"></i>
+      </button>
+
+      <div class="topbar-title">
+        <i class="fa-solid fa-gauge" id="topbarIcon"></i>
+        <span id="topbarTitle">Menú y Productos</span>
       </div>
-    </div>
 
-    <div class="page-body">
+      <!-- Flechas prev/next (ocultas en mobile) -->
+      <div class="topbar-nav admin-topbar-arrows">
+        <button class="btn btn-secondary btn-sm" id="btnPrevAdmin"
+          onclick="seccAnterior()" title="Sección anterior">
+          <i class="fa-solid fa-arrow-left"></i>
+        </button>
+        <span class="nav-step-info" id="stepInfoAdmin">Sección 1 de 4</span>
+        <button class="btn btn-secondary btn-sm" id="btnNextAdmin"
+          onclick="seccSiguiente()" title="Sección siguiente">
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
 
-      <!-- ══════ MENÚ ══════ -->
-      <div class="section active" id="sec-menu">
-        <div class="section-toolbar">
-          <span style="font-size:.88rem;color:var(--muted)"><span id="menu-count">0</span> productos registrados</span>
-          <button class="btn btn-primary" onclick="abrirModal()">
-            <i class="fa-solid fa-plus"></i> Agregar producto
+      <!-- Usuario + logout — siempre a la derecha -->
+      <div class="topbar-user-info">
+        <i class="fa-solid fa-user-tie fa-sm"></i>
+        <span id="adminUserTopbar">Admin</span>
+        <button class="topbar-logout-btn" onclick="cerrarSesion()" title="Cerrar sesión">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </header>
+
+    <div class="page-content">
+
+      <!-- ============================================================
+           PANEL 1 — MENÚ Y PRODUCTOS
+           ============================================================ -->
+      <div class="admin-panel active" id="panelMenu">
+
+        <div class="section-header">
+          <h2><i class="fa-solid fa-utensils"></i> Menú y Productos</h2>
+          <button class="btn btn-primary btn-sm" onclick="abrirModalProducto()">
+            <i class="fa-solid fa-plus"></i> Nuevo producto
           </button>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Producto</th><th>Categoría</th><th>Precio</th>
-                <th>T. Entrega</th><th>Stock</th><th>Estado</th><th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-menu"></tbody>
-          </table>
-        </div>
-      </div>
 
-      <!-- ══════ STOCK ══════ -->
-      <div class="section" id="sec-stock">
-        <div class="section-toolbar">
-          <span style="font-size:.88rem;color:var(--muted)">Ajustá el stock de cada producto</span>
+        <div class="alert alert-info" style="margin-bottom:1rem;">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>Administra los productos disponibles en el kiosco. Los cambios se reflejan
+          automáticamente en todas las terminales conectadas.</div>
         </div>
-        <div class="stock-grid" id="stock-grid"></div>
-      </div>
 
-      <!-- ══════ CAJA ══════ -->
-      <div class="section" id="sec-caja">
-        <div class="caja-grid">
-          <!-- Cola -->
-          <div class="cola-wrap">
-            <div class="cola-header">
-              <h3>Cola de pedidos</h3>
-              <button class="btn btn-ghost btn-sm" onclick="resetearTurnos()">
-                <i class="fa-solid fa-rotate"></i> Resetear
-              </button>
+        <!-- Filtros -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-body" style="padding:.75rem 1rem; display:flex; gap:.75rem; flex-wrap:wrap; align-items:center;">
+            <div style="flex:1; min-width:180px;">
+              <input type="search" class="form-control" id="buscarProducto"
+                placeholder="Buscar producto..." oninput="filtrarProductos()" />
             </div>
-            <div class="cola-body" id="cola-list">
-              <div class="cola-empty">
-                <i class="fa-regular fa-circle-check"></i>
-                Sin pedidos en cola
-              </div>
-            </div>
+            <select class="form-control" id="filtrarCatMenu" onchange="filtrarProductos()"
+              style="max-width:200px;">
+              <option value="">Todas las categorías</option>
+              <option value="hamburguesas">Hamburguesas</option>
+              <option value="combos">Combos</option>
+              <option value="acompañamientos">Acompañamientos</option>
+              <option value="bebidas">Bebidas</option>
+              <option value="postres">Postres</option>
+            </select>
           </div>
-          <!-- Pantalla -->
-          <div>
-            <div class="pantalla-card">
-              <div class="pantalla-label">Turno en pantalla</div>
-              <div class="pantalla-num" id="pantalla-num">—</div>
-              <div class="pantalla-msg" id="pantalla-msg">Sin turno activo</div>
+        </div>
+
+        <!-- Tabla de productos -->
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-list"></i> Productos registrados</h3>
+            <span class="badge badge-amber" id="contadorProductos">0 productos</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrapper" style="border:none; border-radius:0;">
+              <table id="tablaProductos">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Precio</th>
+                    <th>Stock</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyProductos">
+                  <!-- Generado por JS -->
+                </tbody>
+              </table>
             </div>
-            <div class="caja-actions-bar">
-              <button class="btn btn-primary" onclick="llamarSiguiente()">
-                <i class="fa-solid fa-volume-high"></i> Llamar siguiente
-              </button>
-              <button class="btn btn-success" onclick="marcarEntregado()">
-                <i class="fa-solid fa-check"></i> Entregado
-              </button>
-              <button class="btn btn-danger btn-sm" onclick="cancelarTurnoActual()">
-                <i class="fa-solid fa-xmark"></i> Cancelar
-              </button>
+            <div class="empty-state" id="menuEmpty" style="display:none; padding:2.5rem 1rem;">
+              <i class="fa-solid fa-utensils"></i>
+              <h4>Sin productos</h4>
+              <p>Aún no hay productos en el menú. Agrega el primero con el botón de arriba.</p>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ══════ HISTORIAL ══════ -->
-      <div class="section" id="sec-historial">
-        <div class="stats-row" id="historial-stats"></div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr><th>Turno</th><th>Hora</th><th>Items</th><th>T. Est.</th><th>Total</th><th>Estado</th></tr>
-            </thead>
-            <tbody id="tabla-historial"></tbody>
-          </table>
+      <!-- ============================================================
+           PANEL 2 — CONTROL DE STOCK
+           ============================================================ -->
+      <div class="admin-panel" id="panelStock">
+
+        <div class="section-header">
+          <h2><i class="fa-solid fa-boxes-stacked"></i> Control de Stock</h2>
+          <button class="btn btn-secondary btn-sm" onclick="cargarStock()">
+            <i class="fa-solid fa-rotate"></i> Actualizar
+          </button>
+        </div>
+
+        <div class="alert alert-warning" style="margin-bottom:1rem;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div>Los productos con stock bajo o agotado se muestran primero. Actualiza las
+          cantidades para que estén disponibles en el kiosco.</div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid" id="stockKpis">
+          <!-- Generado por JS -->
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-boxes-stacked"></i> Inventario actual</h3>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrapper" style="border:none; border-radius:0;">
+              <table id="tablaStock">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Categoría</th>
+                    <th>Stock actual</th>
+                    <th>Estado</th>
+                    <th>Ajustar</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyStock"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="stockEmpty" style="display:none; padding:2.5rem 1rem;">
+              <i class="fa-solid fa-boxes-stacked"></i>
+              <h4>Sin productos en inventario</h4>
+              <p>Agrega productos desde la sección de Menú para gestionar el stock aquí.</p>
+            </div>
+          </div>
         </div>
       </div>
 
-    </div><!-- /page-body -->
-  </div><!-- /main -->
+      <!-- ============================================================
+           PANEL 3 — CAJA / TURNOS
+           ============================================================ -->
+      <div class="admin-panel" id="panelCaja">
+
+        <div class="section-header">
+          <h2><i class="fa-solid fa-cash-register"></i> Caja / Turnos activos</h2>
+          <div class="d-flex gap-1 flex-wrap">
+            <button class="btn btn-secondary btn-sm" onclick="cargarCaja()">
+              <i class="fa-solid fa-rotate"></i> Actualizar
+            </button>
+          </div>
+        </div>
+
+        <div class="alert alert-info" style="margin-bottom:1rem;">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>Gestiona los pedidos en tiempo real. Llama el turno para que el cliente sepa
+          que su pedido está listo. Los cambios se transmiten a todas las pantallas.</div>
+        </div>
+
+        <!-- KPIs de caja -->
+        <div class="kpi-grid" id="cajaKpis" style="margin-bottom:1.25rem;"></div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3><i class="fa-solid fa-list-check"></i> Pedidos en curso</h3>
+            <span class="badge badge-amber" id="cajaBadge">0 pedidos</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrapper" style="border:none; border-radius:0;">
+              <table id="tablaCaja">
+                <thead>
+                  <tr>
+                    <th>Turno</th>
+                    <th>Productos</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyCaja"></tbody>
+              </table>
+            </div>
+            <div class="empty-state" id="cajaEmpty" style="display:none; padding:2.5rem 1rem;">
+              <i class="fa-solid fa-cash-register"></i>
+              <h4>Sin pedidos activos</h4>
+              <p>Los pedidos del kiosco aparecerán aquí cuando los clientes los confirmen.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================
+           PANEL 4 — HISTORIAL
+           ============================================================ -->
+      <div class="admin-panel" id="panelHistorial">
+
+        <div class="section-header">
+          <h2><i class="fa-solid fa-clock-rotate-left"></i> Historial de Pedidos</h2>
+          <div class="d-flex gap-1 flex-wrap">
+            <button class="btn btn-secondary btn-sm" onclick="cargarHistorial()">
+              <i class="fa-solid fa-rotate"></i> Actualizar
+            </button>
+            <button class="btn btn-danger btn-sm" onclick="limpiarHistorial()">
+              <i class="fa-solid fa-trash"></i> Limpiar
+            </button>
+          </div>
+        </div>
+
+        <div class="alert alert-info" style="margin-bottom:1rem;">
+          <i class="fa-solid fa-circle-info"></i>
+          <div>Aquí puedes consultar todos los pedidos procesados. El historial se almacena
+          localmente en este dispositivo.</div>
+        </div>
+
+        <!-- Filtro de fecha -->
+        <div class="card" style="margin-bottom:1.25rem;">
+          <div class="card-body" style="padding:.75rem 1rem; display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+            <label style="font-size:.8rem; font-weight:600; color:var(--text-muted);">Filtrar por estado:</label>
+            <select class="form-control" id="filtroHistorial" onchange="cargarHistorial()"
+              style="max-width:200px;">
+              <option value="">Todos</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="en prep">En preparación</option>
+              <option value="listo">Listo</option>
+              <option value="entregado">Entregado</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="historialContainer"></div>
+        <div class="empty-state" id="historialEmpty" style="display:none; padding:2.5rem 1rem;">
+          <i class="fa-solid fa-box-open"></i>
+          <h4>Sin registros</h4>
+          <p>No hay pedidos en el historial con ese filtro.</p>
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main-content -->
 </div><!-- /app-layout -->
 
-<!-- MODAL PRODUCTO -->
-<div class="modal-overlay" id="modal-producto">
-  <div class="modal">
+<!-- ===================== BOTTOM NAV ADMIN (mobile) ===================== -->
+<nav class="admin-bottom-nav" id="adminBottomNav" aria-label="Navegación inferior">
+  <button class="bnav-btn active" data-panel="menu" onclick="irASeccion('menu', this)">
+    <i class="fa-solid fa-utensils"></i>
+    <span>Menú</span>
+  </button>
+  <button class="bnav-btn" data-panel="stock" onclick="irASeccion('stock', this)">
+    <i class="fa-solid fa-boxes-stacked"></i>
+    <span>Stock</span>
+  </button>
+  <button class="bnav-btn" data-panel="caja" onclick="irASeccion('caja', this)">
+    <i class="fa-solid fa-cash-register"></i>
+    <span>Caja</span>
+  </button>
+  <button class="bnav-btn" data-panel="historial" onclick="irASeccion('historial', this)">
+    <i class="fa-solid fa-clock-rotate-left"></i>
+    <span>Historial</span>
+  </button>
+</nav>
+
+<!-- ============================================================
+     MODAL — Nuevo / editar producto
+     ============================================================ -->
+<div class="modal-overlay" id="modalProducto">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalProdTitle">
     <div class="modal-header">
-      <h3 id="modal-titulo">Agregar producto</h3>
-      <button class="btn btn-ghost btn-icon btn-sm" onclick="cerrarModal()">
-        <i class="fa-solid fa-xmark"></i>
-      </button>
+      <i class="fa-solid fa-burger"></i>
+      <h3 id="modalProdTitle">Nuevo producto</h3>
     </div>
     <div class="modal-body">
-      <div class="form-grid-2">
+      <input type="hidden" id="prodId" />
+      <div class="form-group">
+        <label for="prodNombre">Nombre del producto</label>
+        <input type="text" class="form-control" id="prodNombre"
+          placeholder="Ej: Hamburguesa Clásica" />
+      </div>
+      <div class="form-group">
+        <label for="prodCategoria">Categoría</label>
+        <select class="form-control" id="prodCategoria">
+          <option value="hamburguesas">Hamburguesas</option>
+          <option value="combos">Combos</option>
+          <option value="acompañamientos">Acompañamientos</option>
+          <option value="bebidas">Bebidas</option>
+          <option value="postres">Postres</option>
+        </select>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:.75rem;">
         <div class="form-group">
-          <label>Nombre</label>
-          <input type="text" id="p-nombre" class="form-control" placeholder="Ej: Combo Clásico" />
+          <label for="prodPrecio">Precio</label>
+          <input type="number" class="form-control" id="prodPrecio"
+            placeholder="0.00" min="0" step="0.01" />
         </div>
         <div class="form-group">
-          <label>Categoría</label>
-          <select id="p-categoria" class="form-control">
-            <option value="combos">Combos</option>
-            <option value="hamburguesas">Hamburguesas</option>
-            <option value="acompañamientos">Acompañamientos</option>
-            <option value="bebidas">Bebidas</option>
-            <option value="postres">Postres</option>
-          </select>
+          <label for="prodStock">Stock inicial</label>
+          <input type="number" class="form-control" id="prodStock"
+            placeholder="0" min="0" step="1" />
         </div>
       </div>
       <div class="form-group">
-        <label>Descripción</label>
-        <input type="text" id="p-desc" class="form-control" placeholder="Descripción corta" />
-      </div>
-      <div class="form-grid-3">
-        <div class="form-group">
-          <label>Precio ($)</label>
-          <input type="number" id="p-precio" class="form-control" placeholder="1200" min="0" />
-        </div>
-        <div class="form-group">
-          <label>Tiempo entrega (min)</label>
-          <input type="number" id="p-tiempo" class="form-control" placeholder="10" min="1" max="90" />
-        </div>
-        <div class="form-group">
-          <label>Stock inicial</label>
-          <input type="number" id="p-stock" class="form-control" placeholder="20" min="0" />
-        </div>
+        <label for="prodDesc">Descripción breve</label>
+        <textarea class="form-control" id="prodDesc"
+          placeholder="Descripción del producto (opcional)..." rows="2"></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-ghost" onclick="cerrarModal()">Cancelar</button>
-      <button class="btn btn-primary" onclick="guardarProducto()">Guardar</button>
+      <button class="btn btn-secondary" onclick="cerrarModalProducto()">
+        <i class="fa-solid fa-xmark"></i> Cancelar
+      </button>
+      <button class="btn btn-primary" onclick="guardarProducto()">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar
+      </button>
     </div>
   </div>
 </div>
 
-<div id="toast-container"></div>
+<!-- Modal ajuste de stock -->
+<div class="modal-overlay" id="modalStock">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalStockTitle">
+    <div class="modal-header">
+      <i class="fa-solid fa-boxes-stacked"></i>
+      <h3 id="modalStockTitle">Ajustar Stock</h3>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="stockProdId" />
+      <p id="stockProdNombre" style="font-weight:600; margin-bottom:1rem;"></p>
+      <div class="form-group">
+        <label for="stockNuevo">Nueva cantidad en stock</label>
+        <input type="number" class="form-control" id="stockNuevo" min="0" step="1" />
+        <div class="form-hint">Ingresa el stock disponible actual para este producto.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModalStock()">
+        <i class="fa-solid fa-xmark"></i> Cancelar
+      </button>
+      <button class="btn btn-primary" onclick="guardarStock()">
+        <i class="fa-solid fa-floppy-disk"></i> Guardar
+      </button>
+    </div>
+  </div>
+</div>
 
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
 <script src="js/store.js"></script>
 <script src="js/channel.js"></script>
 <script src="js/auth.js"></script>
 <script>
-Store.seedInicial();
-Auth.proteger('admin');
-
-const sesion = Auth.getSesion();
-document.getElementById('user-nombre').textContent   = sesion.nombre;
-document.getElementById('user-initials').textContent = sesion.nombre.charAt(0).toUpperCase();
-
-let _editandoId  = null;
-let _turnoActual = null;
-
-// ─── TOPBAR LABELS ────────────────────────────────────
-const TOPBAR = {
-  menu:     ['Gestión de Menú',   'Administrá los productos disponibles'],
-  stock:    ['Gestión de Stock',  'Controlá la disponibilidad de cada producto'],
-  caja:     ['Caja',              'Gestioná la cola de turnos en tiempo real'],
-  historial:['Historial del día', 'Resumen de pedidos y estadísticas']
+/* ============================================================
+   Estado global admin
+   ============================================================ */
+const ADMIN = {
+  seccionActual: 0,
+  secciones: ['menu', 'stock', 'caja', 'historial'],
+  broadcast: null,
+  polling: null,
 };
 
-// ─── NAVEGACIÓN ───────────────────────────────────────
-document.querySelectorAll('.nav-item').forEach(el => {
-  el.addEventListener('click', () => {
-    const sec = el.dataset.sec;
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    el.classList.add('active');
-    document.getElementById('sec-' + sec).classList.add('active');
-    document.getElementById('topbar-title').textContent = TOPBAR[sec][0];
-    document.getElementById('topbar-sub').textContent   = TOPBAR[sec][1];
-    if (sec === 'historial') renderHistorial();
-  });
+const SECCION_META = {
+  menu:      { titulo:'Menú y Productos',    icono:'fa-utensils' },
+  stock:     { titulo:'Control de Stock',    icono:'fa-boxes-stacked' },
+  caja:      { titulo:'Caja / Turnos',       icono:'fa-cash-register' },
+  historial: { titulo:'Historial de Pedidos',icono:'fa-clock-rotate-left' },
+};
+
+const CAT_ICONS = {
+  'hamburguesas':   'fa-burger',
+  'combos':         'fa-gift',
+  'acompañamientos':'fa-drumstick-bite',
+  'bebidas':        'fa-mug-hot',
+  'postres':        'fa-cake-candles',
+};
+
+/* ============================================================
+   INIT
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  Auth.proteger('admin');
+  const u = Auth.getUsuario();
+  if (u) document.getElementById('adminUser').textContent = u.usuario || 'Admin';
+
+  ADMIN.broadcast = Channel.getInstance();
+  ADMIN.broadcast.addEventListener('message', onChannelMsg);
+
+  // Poblar nombre en topbar derecha
+  const topbarUserEl = document.getElementById('adminUserTopbar');
+  if (u && topbarUserEl) topbarUserEl.textContent = u.usuario || 'Admin';
+
+  irASeccion('menu', document.querySelector('.sidebar-nav a.active'));
+  iniciarPolling();
 });
 
-// ─── TOAST ───────────────────────────────────────────
-function toast(msg, tipo = '') {
-  const el = Object.assign(document.createElement('div'), { className: `toast ${tipo}`, textContent: msg });
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 3000);
-}
-
-// ─── MODAL ───────────────────────────────────────────
-function abrirModal(id = null) {
-  _editandoId = id;
-  document.getElementById('modal-titulo').textContent = id ? 'Editar producto' : 'Agregar producto';
-  if (id) {
-    const p = Store.getProducto(id);
-    document.getElementById('p-nombre').value    = p.nombre;
-    document.getElementById('p-desc').value      = p.descripcion;
-    document.getElementById('p-precio').value    = p.precio;
-    document.getElementById('p-tiempo').value    = p.tiempoEntrega;
-    document.getElementById('p-stock').value     = p.stock;
-    document.getElementById('p-categoria').value = p.categoria;
-  } else {
-    ['p-nombre','p-desc','p-precio','p-tiempo','p-stock'].forEach(id => document.getElementById(id).value = '');
-    document.getElementById('p-categoria').value = 'combos';
+function onChannelMsg(e) {
+  const { evento } = e.data || {};
+  if ([EVENTOS.NUEVO_PEDIDO].includes(evento)) {
+    if (ADMIN.seccionActual === 2) cargarCaja();
+    mostrarToast('Nuevo pedido recibido.', 'info', 'fa-bell');
   }
-  document.getElementById('modal-producto').classList.add('open');
-}
-function cerrarModal() { document.getElementById('modal-producto').classList.remove('open'); }
-
-// ═══════════════════════════════════════════════════════
-// MENÚ
-// ═══════════════════════════════════════════════════════
-const catIconos = { combos:'fa-gift', hamburguesas:'fa-burger', 'acompañamientos':'fa-drumstick-bite', bebidas:'fa-mug-hot', postres:'fa-cake-candles' };
-
-function stockDot(stock) {
-  if (stock === 0) return '<span class="stock-dot dot-out" title="Agotado"></span>';
-  if (stock <= 5)  return '<span class="stock-dot dot-low" title="Stock bajo"></span>';
-  return '<span class="stock-dot dot-ok" title="OK"></span>';
 }
 
-function renderMenu() {
+function iniciarPolling() {
+  ADMIN.polling = setInterval(() => {
+    const sec = ADMIN.secciones[ADMIN.seccionActual];
+    if (sec === 'caja') cargarCaja(true);
+  }, 8000);
+}
+
+/* ============================================================
+   SIDEBAR — hamburger (mobile)
+   ============================================================ */
+function abrirSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function cerrarSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+/* ============================================================
+   NAVEGACIÓN DE SECCIONES
+   ============================================================ */
+function irASeccion(seccion, linkEl) {
+  const idx = ADMIN.secciones.indexOf(seccion);
+  if (idx === -1) return;
+  ADMIN.seccionActual = idx;
+
+  // Ocultar todos los paneles
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel' + capitalizar(seccion))?.classList.add('active');
+
+  // Nav links — sidebar
+  document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    a.classList.remove('active');
+    if (a.dataset.panel === seccion) a.classList.add('active');
+  });
+
+  // Bottom nav — mobile
+  document.querySelectorAll('.admin-bottom-nav .bnav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.panel === seccion);
+  });
+
+  // Topbar
+  const meta = SECCION_META[seccion];
+  document.getElementById('topbarTitle').textContent = meta.titulo;
+  const icon = document.getElementById('topbarIcon');
+  icon.className = `fa-solid ${meta.icono}`;
+
+  // Step info
+  document.getElementById('stepInfoAdmin').textContent =
+    `Sección ${idx + 1} de ${ADMIN.secciones.length}`;
+  document.getElementById('btnPrevAdmin').disabled = idx === 0;
+  document.getElementById('btnNextAdmin').disabled = idx === ADMIN.secciones.length - 1;
+
+  // Cerrar sidebar mobile si está abierto
+  cerrarSidebar();
+
+  // Cargar datos de la sección
+  switch (seccion) {
+    case 'menu':      cargarMenu();      break;
+    case 'stock':     cargarStock();     break;
+    case 'caja':      cargarCaja();      break;
+    case 'historial': cargarHistorial(); break;
+  }
+}
+
+function seccAnterior() { navegarSeccion(-1); }
+function seccSiguiente(){ navegarSeccion(+1); }
+
+function navegarSeccion(delta) {
+  const nuevo = ADMIN.seccionActual + delta;
+  if (nuevo < 0 || nuevo >= ADMIN.secciones.length) return;
+  irASeccion(ADMIN.secciones[nuevo], null);
+}
+
+/* ============================================================
+   PANEL MENÚ — cargar y renderizar
+   ============================================================ */
+function cargarMenu() {
   const menu = Store.getMenu();
-  document.getElementById('menu-count').textContent = menu.length;
-  document.getElementById('tabla-menu').innerHTML = menu.length === 0
-    ? '<tr><td colspan="7" style="text-align:center;padding:36px;color:var(--muted)">Sin productos registrados</td></tr>'
-    : menu.map(p => `
-      <tr>
-        <td>
-          <div style="display:flex;align-items:center;gap:10px">
-            <div style="width:36px;height:36px;background:var(--bg);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--primary);flex-shrink:0">
-              <i class="fa-solid ${catIconos[p.categoria] || 'fa-utensils'}"></i>
-            </div>
-            <div>
-              <div style="font-weight:600;font-size:.88rem">${p.nombre}</div>
-              <div style="font-size:.72rem;color:var(--muted)">${p.descripcion}</div>
-            </div>
+  const busq = (document.getElementById('buscarProducto')?.value || '').toLowerCase();
+  const cat  = document.getElementById('filtrarCatMenu')?.value || '';
+
+  const filtrado = menu.filter(p =>
+    (cat === '' || p.categoria === cat) &&
+    (busq === '' || p.nombre.toLowerCase().includes(busq) ||
+     (p.descripcion || '').toLowerCase().includes(busq))
+  );
+
+  document.getElementById('contadorProductos').textContent =
+    `${filtrado.length} producto${filtrado.length !== 1 ? 's' : ''}`;
+
+  const tbody = document.getElementById('tbodyProductos');
+  const empty = document.getElementById('menuEmpty');
+  tbody.innerHTML = '';
+
+  if (!filtrado.length) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  filtrado.forEach(prod => {
+    const icon = CAT_ICONS[prod.categoria] || 'fa-utensils';
+    const agotado = prod.stock !== undefined && prod.stock <= 0;
+    const stockBajo = prod.stock !== undefined && prod.stock > 0 && prod.stock <= 5;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Producto">
+        <div style="display:flex; align-items:center; gap:.6rem;">
+          <div style="width:32px; height:32px; background:var(--amber-bg); border-radius:6px;
+               display:flex; align-items:center; justify-content:center; color:var(--amber); flex-shrink:0;">
+            <i class="fa-solid ${icon}"></i>
           </div>
-        </td>
-        <td><span class="badge badge-neutral">${p.categoria}</span></td>
-        <td><strong>$${p.precio.toLocaleString()}</strong></td>
-        <td style="font-size:.82rem">${p.tiempoEntrega} min</td>
-        <td>
-          <div style="display:flex;align-items:center;gap:7px">
-            ${stockDot(p.stock)}
-            <span style="font-size:.85rem;font-weight:600">${p.stock}</span>
+          <div>
+            <div style="font-weight:600; font-size:.875rem;">${prod.nombre}</div>
+            <div style="font-size:.75rem; color:var(--text-muted);">${prod.descripcion || ''}</div>
           </div>
-        </td>
-        <td>
-          ${p.disponible
-            ? '<span class="badge badge-success"><i class="fa-solid fa-circle" style="font-size:.45rem"></i> Activo</span>'
-            : '<span class="badge badge-danger"><i class="fa-solid fa-circle" style="font-size:.45rem"></i> Pausado</span>'}
-        </td>
-        <td>
-          <div class="td-actions">
-            <button class="btn btn-ghost btn-sm" onclick="abrirModal('${p.id}')"><i class="fa-solid fa-pen"></i></button>
-            <button class="btn btn-${p.disponible?'warning':'success'} btn-sm" onclick="toggleDisponible('${p.id}',${p.disponible})">
-              <i class="fa-solid fa-${p.disponible?'pause':'play'}"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="eliminarProducto('${p.id}')"><i class="fa-solid fa-trash"></i></button>
-          </div>
-        </td>
-      </tr>`).join('');
+        </div>
+      </td>
+      <td data-label="Categoría">
+        <span class="badge badge-amber">${capitalizar(prod.categoria || '')}</span>
+      </td>
+      <td data-label="Precio" style="font-weight:600; color:var(--amber-dark);">
+        ${formatearPrecio(prod.precio)}
+      </td>
+      <td data-label="Stock">
+        <span class="${agotado ? 'badge badge-cancelled' : stockBajo ? 'badge badge-pending' : 'badge badge-ready'}">
+          ${prod.stock ?? 'N/A'}
+        </span>
+      </td>
+      <td data-label="Estado">
+        <span class="badge ${agotado ? 'badge-cancelled' : 'badge-ready'}">
+          ${agotado ? 'Agotado' : 'Disponible'}
+        </span>
+      </td>
+      <td data-label="Acciones">
+        <div style="display:flex; gap:.4rem; flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="editarProducto(${prod.id})"
+            title="Editar producto">
+            <i class="fa-solid fa-pencil"></i>
+          </button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${prod.id})"
+            title="Eliminar producto">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function filtrarProductos() { cargarMenu(); }
+
+/* ============================================================
+   MODAL PRODUCTO
+   ============================================================ */
+function abrirModalProducto(prod = null) {
+  document.getElementById('prodId').value      = prod?.id ?? '';
+  document.getElementById('prodNombre').value  = prod?.nombre ?? '';
+  document.getElementById('prodCategoria').value = prod?.categoria ?? 'hamburguesas';
+  document.getElementById('prodPrecio').value  = prod?.precio ?? '';
+  document.getElementById('prodStock').value   = prod?.stock ?? '';
+  document.getElementById('prodDesc').value    = prod?.descripcion ?? '';
+  document.getElementById('modalProdTitle').textContent = prod ? 'Editar producto' : 'Nuevo producto';
+  document.getElementById('modalProducto').classList.add('active');
+}
+
+function cerrarModalProducto() {
+  document.getElementById('modalProducto').classList.remove('active');
+}
+
+function editarProducto(id) {
+  const menu = Store.getMenu();
+  const prod = menu.find(p => p.id == id);
+  if (prod) abrirModalProducto(prod);
 }
 
 function guardarProducto() {
+  const id   = document.getElementById('prodId').value;
+  const nombre = document.getElementById('prodNombre').value.trim();
+  const precio = parseFloat(document.getElementById('prodPrecio').value);
+  const stock  = parseInt(document.getElementById('prodStock').value, 10);
+
+  if (!nombre) {
+    mostrarToast('El nombre del producto es obligatorio.', 'warning', 'fa-triangle-exclamation');
+    return;
+  }
+  if (isNaN(precio) || precio < 0) {
+    mostrarToast('Ingresa un precio válido.', 'warning', 'fa-triangle-exclamation');
+    return;
+  }
+
+  const menu = Store.getMenu();
   const datos = {
-    nombre:       document.getElementById('p-nombre').value.trim(),
-    descripcion:  document.getElementById('p-desc').value.trim(),
-    precio:       parseFloat(document.getElementById('p-precio').value) || 0,
-    tiempoEntrega:parseInt(document.getElementById('p-tiempo').value)   || 10,
-    stock:        parseInt(document.getElementById('p-stock').value)    || 0,
-    categoria:    document.getElementById('p-categoria').value,
-    disponible:   true
+    id: id ? parseInt(id) : Date.now(),
+    nombre,
+    categoria: document.getElementById('prodCategoria').value,
+    precio,
+    stock: isNaN(stock) ? 0 : stock,
+    descripcion: document.getElementById('prodDesc').value.trim(),
   };
-  if (!datos.nombre || datos.precio <= 0) { toast('Completá nombre y precio', 'error'); return; }
-  _editandoId ? Store.actualizarProducto(_editandoId, datos) : Store.agregarProducto(datos);
-  cerrarModal();
-  renderMenu(); renderStock();
-  Canal.emitir(EVENTOS.MENU_ACTUALIZADO, Store.getMenu());
-  toast(_editandoId ? 'Producto actualizado' : 'Producto agregado', 'success');
+
+  if (id) {
+    const idx = menu.findIndex(p => p.id == id);
+    if (idx >= 0) menu[idx] = datos;
+  } else {
+    menu.push(datos);
+  }
+
+  Store.guardarMenu(menu);
+  ADMIN.broadcast.postMessage({ evento: EVENTOS.MENU_ACTUALIZADO, datos: {} });
+  cerrarModalProducto();
+  cargarMenu();
+  mostrarToast(id ? 'Producto actualizado.' : 'Producto agregado al menú.', 'success', 'fa-check-circle');
 }
 
 function eliminarProducto(id) {
-  if (!confirm('¿Eliminar este producto?')) return;
-  Store.eliminarProducto(id);
-  renderMenu(); renderStock();
-  Canal.emitir(EVENTOS.MENU_ACTUALIZADO, Store.getMenu());
-  toast('Producto eliminado', 'warning');
+  if (!confirm('¿Eliminar este producto del menú?')) return;
+  const menu = Store.getMenu().filter(p => p.id != id);
+  Store.guardarMenu(menu);
+  ADMIN.broadcast.postMessage({ evento: EVENTOS.MENU_ACTUALIZADO, datos: {} });
+  cargarMenu();
+  mostrarToast('Producto eliminado del menú.', 'info', 'fa-trash');
 }
 
-function toggleDisponible(id, actual) {
-  Store.actualizarProducto(id, { disponible: !actual });
-  renderMenu(); renderStock();
-  Canal.emitir(EVENTOS.MENU_ACTUALIZADO, Store.getMenu());
-  toast(!actual ? 'Producto activado' : 'Producto pausado');
-}
+/* ============================================================
+   PANEL STOCK
+   ============================================================ */
+function cargarStock() {
+  const menu = Store.getMenu();
+  const tbody = document.getElementById('tbodyStock');
+  const empty = document.getElementById('stockEmpty');
+  const kpis  = document.getElementById('stockKpis');
+  tbody.innerHTML = '';
 
-// ═══════════════════════════════════════════════════════
-// STOCK
-// ═══════════════════════════════════════════════════════
-function renderStock() {
-  document.getElementById('stock-grid').innerHTML = Store.getMenu().map(p => `
-    <div class="stock-item">
-      <div class="stock-icon"><i class="fa-solid ${catIconos[p.categoria] || 'fa-utensils'}"></i></div>
-      <div class="stock-info">
-        <div class="name">${p.nombre}</div>
-        <div class="cat">${p.categoria}</div>
+  if (!menu.length) {
+    empty.style.display = 'block';
+    kpis.innerHTML = '';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Ordenar: agotados primero, luego bajos, luego ok
+  const ord = [...menu].sort((a, b) => {
+    const va = stockScore(a), vb = stockScore(b);
+    return va - vb;
+  });
+
+  const total   = menu.length;
+  const agotados = menu.filter(p => (p.stock ?? 0) <= 0).length;
+  const bajos   = menu.filter(p => (p.stock ?? 0) > 0 && (p.stock ?? 0) <= 5).length;
+  const ok      = total - agotados - bajos;
+
+  kpis.innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i class="fa-solid fa-boxes-stacked"></i></div>
+      <div><div class="kpi-val">${total}</div><div class="kpi-label">Productos totales</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i class="fa-solid fa-circle-check"></i></div>
+      <div><div class="kpi-val">${ok}</div><div class="kpi-label">Con stock OK</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon" style="background:var(--warning-bg);color:var(--warning);">
+        <i class="fa-solid fa-triangle-exclamation"></i>
       </div>
-      ${stockDot(p.stock)}
-      <div class="stock-controls">
-        <input type="number" id="si-${p.id}" value="${p.stock}" min="0" />
-        <button class="btn btn-primary btn-sm" onclick="actualizarStock('${p.id}')">
-          <i class="fa-solid fa-check"></i>
+      <div><div class="kpi-val">${bajos}</div><div class="kpi-label">Stock bajo</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon red"><i class="fa-solid fa-ban"></i></div>
+      <div><div class="kpi-val">${agotados}</div><div class="kpi-label">Agotados</div></div>
+    </div>
+  `;
+
+  ord.forEach(prod => {
+    const st = prod.stock ?? 0;
+    const estado = st <= 0 ? 'agotado' : st <= 5 ? 'bajo' : 'ok';
+    const badgeClass = estado === 'ok' ? 'badge-ready' : estado === 'bajo' ? 'badge-pending' : 'badge-cancelled';
+    const icon = CAT_ICONS[prod.categoria] || 'fa-utensils';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Producto">
+        <div style="display:flex; align-items:center; gap:.5rem;">
+          <i class="fa-solid ${icon}" style="color:var(--amber); width:18px; text-align:center;"></i>
+          <span style="font-weight:600;">${prod.nombre}</span>
+        </div>
+      </td>
+      <td data-label="Categoría">
+        <span class="badge badge-amber">${capitalizar(prod.categoria || '')}</span>
+      </td>
+      <td data-label="Stock actual" style="font-weight:700; font-size:1rem;">
+        ${st}
+      </td>
+      <td data-label="Estado">
+        <span class="badge ${badgeClass}">
+          ${estado === 'ok' ? 'Disponible' : estado === 'bajo' ? 'Stock bajo' : 'Agotado'}
+        </span>
+      </td>
+      <td data-label="Ajustar">
+        <button class="btn btn-secondary btn-sm" onclick="abrirModalStock(${prod.id}, '${prod.nombre}', ${st})">
+          <i class="fa-solid fa-sliders"></i> Ajustar
         </button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function stockScore(p) {
+  const s = p.stock ?? 0;
+  if (s <= 0) return 0;
+  if (s <= 5) return 1;
+  return 2;
+}
+
+function abrirModalStock(id, nombre, stockActual) {
+  document.getElementById('stockProdId').value    = id;
+  document.getElementById('stockProdNombre').textContent = nombre;
+  document.getElementById('stockNuevo').value     = stockActual;
+  document.getElementById('modalStock').classList.add('active');
+}
+
+function cerrarModalStock() {
+  document.getElementById('modalStock').classList.remove('active');
+}
+
+function guardarStock() {
+  const id    = parseInt(document.getElementById('stockProdId').value);
+  const nuevo = parseInt(document.getElementById('stockNuevo').value, 10);
+  if (isNaN(nuevo) || nuevo < 0) {
+    mostrarToast('Ingresa una cantidad de stock válida.', 'warning', 'fa-triangle-exclamation');
+    return;
+  }
+  const menu = Store.getMenu();
+  const idx  = menu.findIndex(p => p.id === id);
+  if (idx >= 0) {
+    const delta = nuevo - (menu[idx].stock ?? 0);
+    Store.actualizarStock(id, delta);
+    ADMIN.broadcast.postMessage({ evento: EVENTOS.STOCK_ACTUALIZADO, datos: { id, stock: nuevo } });
+    cerrarModalStock();
+    cargarStock();
+    mostrarToast('Stock actualizado correctamente.', 'success', 'fa-check-circle');
+  }
+}
+
+/* ============================================================
+   PANEL CAJA — turnos activos
+   ============================================================ */
+function cargarCaja(silencioso = false) {
+  const pedidos = Store.getPedidos ? Store.getPedidos() : [];
+  const activos = pedidos.filter(p => p.estado !== 'entregado' && p.estado !== 'cancelado');
+
+  const tbody = document.getElementById('tbodyCaja');
+  const empty = document.getElementById('cajaEmpty');
+  const badge = document.getElementById('cajaBadge');
+  const kpis  = document.getElementById('cajaKpis');
+
+  badge.textContent = `${activos.length} pedido${activos.length !== 1 ? 's' : ''}`;
+
+  const totalVenta = pedidos
+    .filter(p => p.estado === 'entregado')
+    .reduce((s, p) => s + (p.total || 0), 0);
+  const enPrep = pedidos.filter(p => p.estado === 'en prep').length;
+  const listos = pedidos.filter(p => p.estado === 'listo').length;
+
+  kpis.innerHTML = `
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i class="fa-solid fa-receipt"></i></div>
+      <div><div class="kpi-val">${activos.length}</div><div class="kpi-label">Pedidos activos</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon blue"><i class="fa-solid fa-fire-burner"></i></div>
+      <div><div class="kpi-val">${enPrep}</div><div class="kpi-label">En preparación</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i class="fa-solid fa-check-double"></i></div>
+      <div><div class="kpi-val">${listos}</div><div class="kpi-label">Listos para llamar</div></div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-icon amber"><i class="fa-solid fa-coins"></i></div>
+      <div><div class="kpi-val">${formatearPrecio(totalVenta)}</div>
+           <div class="kpi-label">Vendido hoy</div></div>
+    </div>
+  `;
+
+  tbody.innerHTML = '';
+  if (!activos.length) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  activos.slice().reverse().forEach(p => {
+    const badgeE = estadoToBadge(p.estado);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td data-label="Turno">
+        <span style="font-size:1.2rem; font-weight:700; color:var(--amber-dark);">#${p.turno}</span>
+      </td>
+      <td data-label="Productos">
+        <div style="font-size:.8rem; color:var(--text-muted); max-width:200px;">
+          ${(p.items || []).map(i => `${i.nombre} x${i.cantidad}`).join(', ')}
+        </div>
+      </td>
+      <td data-label="Total" style="font-weight:700; color:var(--amber-dark);">
+        ${formatearPrecio(p.total)}
+      </td>
+      <td data-label="Estado">
+        <span class="badge badge-${badgeE}">${p.estado}</span>
+      </td>
+      <td data-label="Acciones">
+        <div style="display:flex; gap:.4rem; flex-wrap:wrap;">
+          ${p.estado === 'pendiente' ? `
+          <button class="btn btn-sm" style="background:var(--info-bg);color:var(--info);border:1px solid #c0d6f7;"
+            onclick="cambiarEstado(${p.id}, 'en prep')">
+            <i class="fa-solid fa-fire-burner"></i> Preparar
+          </button>` : ''}
+          ${p.estado === 'en prep' ? `
+          <button class="btn btn-success btn-sm" onclick="cambiarEstado(${p.id}, 'listo')">
+            <i class="fa-solid fa-bell"></i> Llamar turno
+          </button>` : ''}
+          ${p.estado === 'listo' ? `
+          <button class="btn btn-primary btn-sm" onclick="cambiarEstado(${p.id}, 'entregado')">
+            <i class="fa-solid fa-check-double"></i> Entregado
+          </button>` : ''}
+          <button class="btn btn-danger btn-sm" onclick="cambiarEstado(${p.id}, 'cancelado')">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function cambiarEstado(idPedido, nuevoEstado) {
+  const pedidos = Store.getPedidos ? Store.getPedidos() : [];
+  const idx = pedidos.findIndex(p => p.id == idPedido);
+  if (idx === -1) return;
+  pedidos[idx].estado = nuevoEstado;
+  if (Store.guardarPedidos) Store.guardarPedidos(pedidos);
+
+  const pedido = pedidos[idx];
+  let evento, msg;
+  switch (nuevoEstado) {
+    case 'en prep':
+      evento = EVENTOS.PEDIDO_EN_PREP;
+      msg = `Turno #${pedido.turno} en preparación.`;
+      break;
+    case 'listo':
+      evento = EVENTOS.TURNO_LLAMADO;
+      msg = `Turno #${pedido.turno} llamado.`;
+      break;
+    case 'entregado':
+      evento = EVENTOS.TURNO_COMPLETADO;
+      msg = `Turno #${pedido.turno} entregado.`;
+      break;
+    case 'cancelado':
+      evento = EVENTOS.TURNO_CANCELADO;
+      msg = `Turno #${pedido.turno} cancelado.`;
+      break;
+  }
+  if (evento) {
+    ADMIN.broadcast.postMessage({
+      evento,
+      datos: { numero: pedido.turno, turno: pedido.turno, pedidoId: pedido.id },
+    });
+  }
+  cargarCaja();
+  mostrarToast(msg, 'success', 'fa-check-circle');
+}
+
+/* ============================================================
+   PANEL HISTORIAL
+   ============================================================ */
+function cargarHistorial() {
+  const filtro = document.getElementById('filtroHistorial')?.value || '';
+  const pedidos = Store.getPedidos ? Store.getPedidos() : [];
+  const lista = filtro ? pedidos.filter(p => p.estado === filtro) : pedidos;
+  const container = document.getElementById('historialContainer');
+  const empty     = document.getElementById('historialEmpty');
+  container.innerHTML = '';
+
+  if (!lista.length) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  lista.slice().reverse().forEach(p => {
+    const badgeE = estadoToBadge(p.estado);
+    const card = document.createElement('div');
+    card.className = 'pedido-card';
+    card.innerHTML = `
+      <div class="pedido-card-header">
+        <span style="font-weight:700; font-size:1.1rem; color:var(--amber-dark);">
+          <i class="fa-solid fa-ticket"></i> #${p.turno}
+        </span>
+        <span class="badge badge-${badgeE}">${p.estado}</span>
+        <span style="margin-left:auto; font-size:.78rem; color:var(--text-muted);">
+          <i class="fa-solid fa-clock"></i>
+          ${p.fecha ? new Date(p.fecha).toLocaleString('es-AR') : '—'}
+        </span>
       </div>
-    </div>`).join('');
+      <div class="pedido-card-body">
+        <ul class="pedido-items-list">
+          ${(p.items || []).map(i =>
+            `<li>
+              <span>${i.nombre} x${i.cantidad}</span>
+              <span style="color:var(--amber-dark); font-weight:600;">${formatearPrecio(i.precio * i.cantidad)}</span>
+            </li>`
+          ).join('')}
+        </ul>
+      </div>
+      <div class="pedido-card-footer">
+        <span style="font-size:.8rem; color:var(--text-muted);">
+          ${(p.items || []).length} producto${(p.items || []).length !== 1 ? 's' : ''}
+        </span>
+        <span style="font-weight:700; color:var(--amber-dark); font-size:1rem;">
+          Total: ${formatearPrecio(p.total)}
+        </span>
+      </div>
+    `;
+    container.appendChild(card);
+  });
 }
 
-function actualizarStock(id) {
-  const val = parseInt(document.getElementById('si-'+id).value);
-  if (isNaN(val) || val < 0) { toast('Valor inválido', 'error'); return; }
-  const delta = val - Store.getProducto(id).stock;
-  Store.actualizarStock(id, delta);
-  renderStock(); renderMenu();
-  Canal.emitir(EVENTOS.STOCK_ACTUALIZADO, Store.getMenu());
-  toast('Stock actualizado', 'success');
+function limpiarHistorial() {
+  if (!confirm('¿Eliminar todo el historial de pedidos? Esta acción no se puede deshacer.')) return;
+  if (Store.guardarPedidos) Store.guardarPedidos([]);
+  cargarHistorial();
+  mostrarToast('Historial borrado.', 'info', 'fa-trash');
 }
 
-// ═══════════════════════════════════════════════════════
-// CAJA
-// ═══════════════════════════════════════════════════════
-function renderCola() {
-  const cola = Store.getPedidos().filter(p => ['pendiente','en_preparacion','llamado'].includes(p.estado));
-  const badgeEl = document.getElementById('badge-cola');
-  badgeEl.textContent = cola.length;
-  badgeEl.classList.toggle('show', cola.length > 0);
-
-  document.getElementById('cola-list').innerHTML = cola.length === 0
-    ? '<div class="cola-empty"><i class="fa-regular fa-circle-check"></i>Sin pedidos pendientes</div>'
-    : cola.map(p => {
-        const cls = p.estado === 'llamado' ? 'state-llamado' : p.estado === 'en_preparacion' ? 'state-prep' : '';
-        const items = p.items.map(i => `${i.nombre} ×${i.cantidad}`).join(' · ');
-        return `
-        <div class="turno-row ${cls}">
-          <div>
-            <div class="turno-num">${p.turno}</div>
-            <div class="turno-meta">${items}</div>
-            <div class="turno-meta" style="color:var(--info);margin-top:2px">
-              <i class="fa-regular fa-clock"></i> ~${p.tiempoEstimado} min &nbsp;·&nbsp; $${p.total.toLocaleString()}
-            </div>
-          </div>
-          <div class="turno-acts">
-            <button class="btn btn-info btn-sm" onclick="ponerEnPrep('${p.id}')">
-              <i class="fa-solid fa-fire-burner"></i>
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="cancelarPedido('${p.id}')">
-              <i class="fa-solid fa-xmark"></i>
-            </button>
-          </div>
-        </div>`;
-      }).join('');
+/* ============================================================
+   UTILIDADES COMPARTIDAS
+   ============================================================ */
+function estadoToBadge(e) {
+  const m = { pendiente:'pending', 'en prep':'prep', listo:'ready',
+               cancelado:'cancelled', entregado:'ready', llamado:'prep' };
+  return m[e] || 'pending';
 }
 
-function ponerEnPrep(id) {
-  Store.actualizarEstadoPedido(id, 'en_preparacion');
-  Canal.emitir(EVENTOS.PEDIDO_EN_PREP, { id });
-  renderCola(); toast('En preparación', 'success');
+function formatearPrecio(n) {
+  return '$' + Number(n || 0).toLocaleString('es-AR', {
+    minimumFractionDigits: 2, maximumFractionDigits: 2,
+  });
 }
 
-function llamarSiguiente() {
-  const next = Store.getPedidos().find(p => ['pendiente','en_preparacion'].includes(p.estado));
-  if (!next) { toast('No hay pedidos en cola', 'warning'); return; }
-  _turnoActual = next;
-  Store.actualizarEstadoPedido(next.id, 'llamado');
-  const el = document.getElementById('pantalla-num');
-  el.textContent = next.turno;
-  el.classList.add('pulse');
-  document.getElementById('pantalla-msg').textContent = 'Pase a retirar por caja';
-  Canal.emitir(EVENTOS.TURNO_LLAMADO, { turno: next.turno, pedidoId: next.id });
-  renderCola(); toast(`Llamando turno ${next.turno}`, 'success');
+function capitalizar(s) {
+  if (!s) return '';
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function marcarEntregado() {
-  if (!_turnoActual) { toast('Sin turno activo', 'warning'); return; }
-  Store.actualizarEstadoPedido(_turnoActual.id, 'entregado');
-  Canal.emitir(EVENTOS.TURNO_COMPLETADO, { turno: _turnoActual.turno, pedidoId: _turnoActual.id });
-  document.getElementById('pantalla-num').textContent = '—';
-  document.getElementById('pantalla-num').classList.remove('pulse');
-  document.getElementById('pantalla-msg').textContent = 'Sin turno activo';
-  toast(`Turno ${_turnoActual.turno} entregado`, 'success');
-  _turnoActual = null; renderCola();
+function mostrarToast(mensaje, tipo = 'info', icono = 'fa-circle-info') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast ${tipo}`;
+  t.innerHTML = `<i class="fa-solid ${icono}"></i><span>${mensaje}</span>`;
+  c.appendChild(t);
+  setTimeout(() => {
+    t.classList.add('toast-out');
+    setTimeout(() => t.remove(), 250);
+  }, 3500);
 }
 
-function cancelarTurnoActual() {
-  if (!_turnoActual) { toast('Sin turno activo', 'warning'); return; }
-  cancelarPedido(_turnoActual.id);
-  document.getElementById('pantalla-num').textContent = '—';
-  document.getElementById('pantalla-num').classList.remove('pulse');
-  document.getElementById('pantalla-msg').textContent = 'Sin turno activo';
-  _turnoActual = null;
+function cerrarSesion() {
+  if (ADMIN.polling) clearInterval(ADMIN.polling);
+  Auth.cerrarSesion();
+  window.location.href = 'index.html';
 }
-
-function cancelarPedido(id) {
-  const p = Store.getPedidos().find(x => x.id === id);
-  if (!p) return;
-  p.items.forEach(i => Store.actualizarStock(i.productoId, i.cantidad));
-  Store.actualizarEstadoPedido(id, 'cancelado');
-  Canal.emitir(EVENTOS.TURNO_CANCELADO, { turno: p.turno, pedidoId: id });
-  Canal.emitir(EVENTOS.STOCK_ACTUALIZADO, Store.getMenu());
-  renderCola(); toast(`Turno ${p.turno} cancelado`, 'warning');
-}
-
-function resetearTurnos() {
-  if (!confirm('¿Resetear el contador de turnos?')) return;
-  Store.resetTurnos(); toast('Turnos reseteados');
-}
-
-// ═══════════════════════════════════════════════════════
-// HISTORIAL
-// ═══════════════════════════════════════════════════════
-function renderHistorial() {
-  const pedidos    = Store.getPedidos();
-  const entregados = pedidos.filter(p => p.estado === 'entregado');
-  const cancelados = pedidos.filter(p => p.estado === 'cancelado');
-  const ingresos   = entregados.reduce((s, p) => s + p.total, 0);
-
-  document.getElementById('historial-stats').innerHTML = `
-    <div class="stat-card"><div class="stat-value">${pedidos.length}</div><div class="stat-label">Total pedidos</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--success)">${entregados.length}</div><div class="stat-label">Entregados</div></div>
-    <div class="stat-card"><div class="stat-value" style="color:var(--danger)">${cancelados.length}</div><div class="stat-label">Cancelados</div></div>
-    <div class="stat-card"><div class="stat-value">$${ingresos.toLocaleString()}</div><div class="stat-label">Ingresos</div></div>`;
-
-  const estadoBadge = {
-    pendiente:      '<span class="badge badge-warning">Pendiente</span>',
-    en_preparacion: '<span class="badge badge-info">En prep.</span>',
-    llamado:        '<span class="badge badge-info">Llamado</span>',
-    entregado:      '<span class="badge badge-success">Entregado</span>',
-    cancelado:      '<span class="badge badge-danger">Cancelado</span>'
-  };
-
-  document.getElementById('tabla-historial').innerHTML = pedidos.length === 0
-    ? '<tr><td colspan="6" style="text-align:center;padding:36px;color:var(--muted)">Sin pedidos hoy</td></tr>'
-    : [...pedidos].reverse().map(p => {
-        const hora  = new Date(p.creadoEn).toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
-        const items = p.items.map(i => `${i.nombre} ×${i.cantidad}`).join(', ');
-        return `<tr>
-          <td><strong>${p.turno}</strong></td>
-          <td>${hora}</td>
-          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${items}">${items}</td>
-          <td>${p.tiempoEstimado} min</td>
-          <td><strong>$${p.total.toLocaleString()}</strong></td>
-          <td>${estadoBadge[p.estado] || p.estado}</td>
-        </tr>`;
-      }).join('');
-}
-
-// ─── BROADCAST ───────────────────────────────────────
-Canal.escuchar(EVENTOS.NUEVO_PEDIDO, pedido => {
-  renderCola();
-  toast(`Nuevo pedido: ${pedido.turno}`, 'success');
-});
-
-// ─── INIT ─────────────────────────────────────────────
-renderMenu(); renderStock(); renderCola();
 </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"f0f03d0605bf45f1a3b17cf7d5e6861f","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
