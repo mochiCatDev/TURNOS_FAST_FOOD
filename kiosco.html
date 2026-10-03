@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FastTurno — Kiosco</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="kiosco-header">
+  <div class="kiosco-brand">🍔 <span>FastTurno</span> — Kiosco</div>
+  <div class="kiosco-user">
+    <span id="kiosco-user-nombre"></span>
+    <button class="btn btn-outline btn-sm" onclick="Auth.logout()">Salir</button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<div class="kiosco-main">
+
+  <!-- PANEL MENÚ -->
+  <div class="menu-panel">
+    <div class="categorias" id="categorias">
+      <button class="cat-btn active" data-cat="todos">🍽️ Todos</button>
+    </div>
+    <div class="productos-grid" id="productos-grid"></div>
+  </div>
+
+  <!-- CARRITO -->
+  <aside class="carrito-panel">
+    <h3>🛒 Tu pedido</h3>
+    <div class="carrito-items" id="carrito-items">
+      <div class="carrito-empty">Aún no agregaste nada</div>
+    </div>
+    <div class="carrito-footer">
+      <div class="carrito-total-row"><span>Subtotal</span><span id="subtotal">$0</span></div>
+      <div class="carrito-tiempo" id="tiempo-estimado"></div>
+      <div class="carrito-total-row grande"><span>Total</span><span id="total">$0</span></div>
+      <button class="btn btn-primary btn-block btn-lg" style="margin-top:12px" onclick="confirmarPedido()">
+        🎫 Confirmar pedido
+      </button>
+    </div>
+  </aside>
+</div>
+
+<!-- ════ MODAL CONFIRMACIÓN TURNO ════ -->
+<div class="modal-overlay" id="modal-turno">
+  <div class="modal" style="max-width:380px">
+    <div class="confirm-turno">
+      <div style="font-size:2.5rem">✅</div>
+      <h3 style="margin-top:8px">¡Pedido confirmado!</h3>
+      <p class="text-muted">Tu número de turno es:</p>
+      <div class="turno-badge" id="turno-badge">A-001</div>
+      <div class="confirm-tiempo" id="confirm-tiempo"></div>
+      <div class="confirm-msg">Prestá atención a la pantalla cuando llamen tu turno.</div>
+    </div>
+    <div class="modal-footer" style="justify-content:center;margin-top:16px">
+      <button class="btn btn-primary btn-lg" onclick="nuevoPedido()">🍔 Nuevo pedido</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<script src="js/store.js"></script>
+<script src="js/channel.js"></script>
+<script src="js/auth.js"></script>
+<script>
+// ── INIT ──────────────────────────────────────────────
+Store.seedInicial();
+Auth.proteger('kiosco');
+document.getElementById('kiosco-user-nombre').textContent = Auth.getNombre();
+
+let carrito = [];
+let categoriaActiva = 'todos';
+
+// ── HELPERS MODAL ─────────────────────────────────────
+function abrirModal(id)  { document.getElementById(id).classList.add('active'); }
+function cerrarModal(id) { document.getElementById(id).classList.remove('active'); }
+
+function toast(msg, tipo = '') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast ${tipo}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 2800);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER MENÚ
+// ═══════════════════════════════════════════════════════
+function renderCategorias() {
+  const menu = Store.getMenu();
+  const cats = ['todos', ...new Set(menu.map(p => p.categoria))];
+  const container = document.getElementById('categorias');
+
+  container.innerHTML = cats.map(cat => {
+    const emojisMap = { todos: '🍽️', combos: '🎁', hamburguesas: '🍔', acompañamientos: '🍟', bebidas: '🥤', postres: '🍰' };
+    const emoji = emojisMap[cat] || '🍽️';
+    return `<button class="cat-btn ${cat === categoriaActiva ? 'active' : ''}" data-cat="${cat}" onclick="filtrarCategoria('${cat}')">
+      ${emoji} ${cat.charAt(0).toUpperCase() + cat.slice(1)}
+    </button>`;
+  }).join('');
+}
+
+function filtrarCategoria(cat) {
+  categoriaActiva = cat;
+  renderCategorias();
+  renderProductos();
+}
+
+function renderProductos() {
+  const menu    = Store.getMenu();
+  const filtros = categoriaActiva === 'todos' ? menu : menu.filter(p => p.categoria === categoriaActiva);
+  const grid    = document.getElementById('productos-grid');
+
+  if (filtros.length === 0) {
+    grid.innerHTML = '<p class="text-muted" style="padding:30px 0">Sin productos en esta categoría</p>';
+    return;
+  }
+
+  grid.innerHTML = filtros.map(p => `
+    <div class="producto-card ${!p.disponible || p.stock === 0 ? 'agotado' : ''}"
+         onclick="${p.disponible && p.stock > 0 ? `agregarAlCarrito('${p.id}')` : ''}">
+      <div class="prod-emoji-box">${p.emoji}</div>
+      <div class="prod-body">
+        <div class="prod-nombre">${p.nombre}</div>
+        <div class="prod-desc">${p.descripcion}</div>
+        <div class="prod-footer">
+          <span class="prod-precio">$${p.precio.toLocaleString()}</span>
+          ${p.disponible && p.stock > 0
+            ? `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+                 <span class="prod-tiempo">⏱️ ${p.tiempoEntrega} min</span>
+                 <button class="prod-add-btn" onclick="event.stopPropagation();agregarAlCarrito('${p.id}')">+</button>
+               </div>`
+            : `<span class="prod-agotado">🔴 AGOTADO</span>`
+          }
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// CARRITO
+// ═══════════════════════════════════════════════════════
+function agregarAlCarrito(id) {
+  const prod = Store.getProducto(id);
+  if (!prod || !prod.disponible || prod.stock === 0) {
+    toast('Producto no disponible', 'error'); return;
+  }
+
+  const existente = carrito.find(i => i.productoId === id);
+  const cantActual = existente ? existente.cantidad : 0;
+
+  if (cantActual >= prod.stock) {
+    toast(`Stock máximo: ${prod.stock}`, 'warning'); return;
+  }
+
+  if (existente) {
+    existente.cantidad++;
+    existente.subtotal = existente.cantidad * prod.precio;
+  } else {
+    carrito.push({
+      productoId:    id,
+      nombre:        prod.nombre,
+      precio:        prod.precio,
+      tiempoEntrega: prod.tiempoEntrega,
+      cantidad:      1,
+      subtotal:      prod.precio
+    });
+  }
+  renderCarrito();
+  toast(`${prod.emoji} ${prod.nombre} agregado`, 'success');
+}
+
+function cambiarCantidad(id, delta) {
+  const idx = carrito.findIndex(i => i.productoId === id);
+  if (idx === -1) return;
+
+  carrito[idx].cantidad += delta;
+  if (carrito[idx].cantidad <= 0) {
+    carrito.splice(idx, 1);
+  } else {
+    const prod = Store.getProducto(id);
+    if (carrito[idx].cantidad > prod.stock) {
+      carrito[idx].cantidad = prod.stock;
+      toast(`Stock máximo: ${prod.stock}`, 'warning');
+    }
+    carrito[idx].subtotal = carrito[idx].cantidad * carrito[idx].precio;
+  }
+  renderCarrito();
+}
+
+function renderCarrito() {
+  const container = document.getElementById('carrito-items');
+
+  if (carrito.length === 0) {
+    container.innerHTML = '<div class="carrito-empty">Aún no agregaste nada 🤷</div>';
+    document.getElementById('subtotal').textContent      = '$0';
+    document.getElementById('total').textContent         = '$0';
+    document.getElementById('tiempo-estimado').textContent = '';
+    return;
+  }
+
+  container.innerHTML = carrito.map(item => `
+    <div class="carrito-item">
+      <div class="carrito-item-info">
+        <div class="carrito-item-name">${item.nombre}</div>
+        <div class="carrito-item-price">$${item.precio.toLocaleString()} c/u · Sub: $${item.subtotal.toLocaleString()}</div>
+      </div>
+      <div class="qty-controls">
+        <button class="qty-btn" onclick="cambiarCantidad('${item.productoId}', -1)">−</button>
+        <span class="qty-num">${item.cantidad}</span>
+        <button class="qty-btn" onclick="cambiarCantidad('${item.productoId}', 1)">+</button>
+      </div>
+    </div>`).join('');
+
+  const total   = carrito.reduce((s, i) => s + i.subtotal, 0);
+  const tiempoMax = Math.max(...carrito.map(i => i.tiempoEntrega));
+
+  document.getElementById('subtotal').textContent      = `$${total.toLocaleString()}`;
+  document.getElementById('total').textContent         = `$${total.toLocaleString()}`;
+  document.getElementById('tiempo-estimado').textContent = `⏱️ Tiempo estimado: ~${tiempoMax} min`;
+}
+
+// ═══════════════════════════════════════════════════════
+// CONFIRMAR PEDIDO
+// ═══════════════════════════════════════════════════════
+function confirmarPedido() {
+  if (carrito.length === 0) { toast('El carrito está vacío', 'error'); return; }
+
+  // Verificar stock antes de confirmar
+  for (const item of carrito) {
+    const prod = Store.getProducto(item.productoId);
+    if (!prod || prod.stock < item.cantidad) {
+      toast(`Sin stock suficiente: ${item.nombre}`, 'error');
+      renderProductos();
+      return;
+    }
+  }
+
+  const total        = carrito.reduce((s, i) => s + i.subtotal, 0);
+  const tiempoEstimado = Math.max(...carrito.map(i => i.tiempoEntrega));
+
+  const pedido = Store.savePedido({
+    items: carrito.map(i => ({ ...i })),
+    total,
+    tiempoEstimado
+  });
+
+  // Descontar stock
+  carrito.forEach(item => Store.actualizarStock(item.productoId, -item.cantidad));
+
+  // Emitir evento a admin y display
+  Canal.emitir(EVENTOS.NUEVO_PEDIDO, pedido);
+  Canal.emitir(EVENTOS.STOCK_ACTUALIZADO, Store.getMenu());
+
+  // Mostrar modal de confirmación
+  document.getElementById('turno-badge').textContent   = pedido.turno;
+  document.getElementById('confirm-tiempo').textContent = `⏱️ Tiempo estimado: ~${tiempoEstimado} minutos`;
+  abrirModal('modal-turno');
+
+  // Resetear carrito
+  carrito = [];
+  renderCarrito();
+  renderProductos();
+}
+
+function nuevoPedido() {
+  cerrarModal('modal-turno');
+}
+
+// ── BROADCAST CHANNEL LISTENERS ───────────────────────
+Canal.escuchar(EVENTOS.MENU_ACTUALIZADO, menu => {
+  renderCategorias();
+  renderProductos();
+  toast('Menú actualizado 🔄');
+});
+
+Canal.escuchar(EVENTOS.STOCK_ACTUALIZADO, () => {
+  renderProductos();
+});
+
+// ── INICIALIZAR ───────────────────────────────────────
+renderCategorias();
+renderProductos();
+</script>
+</body>
+</html>
