@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,125 +8,126 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
+
 <body>
-<div class="kiosco-page">
+  <div class="kiosco-page">
 
-  <!-- HEADER -->
-  <header class="kiosco-header">
-    <div class="kiosco-brand">
-      <i class="fa-solid fa-burger"></i> FastTurno
-    </div>
-    <div style="display:flex;align-items:center;gap:12px">
-      <span style="font-size:.82rem;color:rgba(255,255,255,.5)" id="kiosco-user"></span>
-      <button class="btn btn-ghost btn-sm" onclick="Auth.logout()">
-        <i class="fa-solid fa-arrow-right-from-bracket"></i> Salir
-      </button>
-    </div>
-  </header>
-
-  <!-- BODY -->
-  <div class="kiosco-body">
-
-    <!-- MENÚ -->
-    <div class="menu-panel">
-      <div class="cat-bar" id="cat-bar"></div>
-      <div class="products-grid" id="products-grid"></div>
-    </div>
-
-    <!-- CARRITO -->
-    <aside class="cart-panel">
-      <div class="cart-header">
-        <i class="fa-solid fa-cart-shopping" style="color:var(--primary)"></i>
-        <h3>Tu pedido</h3>
-        <span class="cart-count" id="cart-count">0</span>
+    <!-- HEADER EN kiosco.html -->
+    <header class="kiosco-header">
+      <div class="kiosco-brand">
+        <i class="fa-solid fa-burger"></i> FastTurno
       </div>
-      <div class="cart-items" id="cart-items">
-        <div class="cart-empty">
-          <i class="fa-solid fa-basket-shopping"></i>
-          <p>Seleccioná productos del menú</p>
-        </div>
-      </div>
-      <div class="cart-footer">
-        <div class="cart-row"><span style="color:var(--muted)">Subtotal</span><span id="subtotal">$0</span></div>
-        <div class="cart-time" id="cart-time" style="display:none">
-          <i class="fa-regular fa-clock"></i><span id="cart-time-text"></span>
-        </div>
-        <div class="cart-row total"><span>Total</span><span id="total">$0</span></div>
-        <button class="btn btn-primary btn-block btn-lg" style="margin-top:4px" onclick="confirmarPedido()">
-          <i class="fa-solid fa-ticket"></i> Confirmar pedido
+      <div style="display:flex;align-items:center;gap:12px">
+        <span style="font-size:.88rem;color:rgba(255,255,255,.9);font-weight:500;" id="kiosco-user"></span>
+        <button class="btn btn-ghost btn-sm" onclick="Auth.logout()">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Salir
         </button>
       </div>
-    </aside>
-  </div>
-</div>
+    </header>
 
-<!-- MODAL TURNO CONFIRMADO -->
-<div class="modal-overlay" id="modal-turno">
-  <div class="modal" style="max-width:380px">
-    <div class="modal-body" style="padding:4px 0">
-      <div class="turno-confirm">
-        <div class="turno-ok-icon"><i class="fa-solid fa-check"></i></div>
-        <div>
-          <h3>Pedido confirmado</h3>
-          <p style="font-size:.85rem;margin-top:4px">Tu número de turno es:</p>
+    <!-- BODY -->
+    <div class="kiosco-body">
+
+      <!-- MENÚ -->
+      <div class="menu-panel">
+        <div class="cat-bar" id="cat-bar"></div>
+        <div class="products-grid" id="products-grid"></div>
+      </div>
+
+      <!-- CARRITO -->
+      <aside class="cart-panel">
+        <div class="cart-header">
+          <i class="fa-solid fa-cart-shopping" style="color:var(--primary)"></i>
+          <h3>Tu pedido</h3>
+          <span class="cart-count" id="cart-count">0</span>
         </div>
-        <div class="turno-big" id="turno-num-display">A-001</div>
-        <div class="turno-time" id="turno-time-display">
-          <i class="fa-regular fa-clock"></i> <span></span>
+        <div class="cart-items" id="cart-items">
+          <div class="cart-empty">
+            <i class="fa-solid fa-basket-shopping"></i>
+            <p>Seleccioná productos del menú</p>
+          </div>
         </div>
-        <p class="turno-note">Atención a la pantalla cuando llamen tu número.</p>
+        <div class="cart-footer">
+          <div class="cart-row"><span style="color:var(--muted)">Subtotal</span><span id="subtotal">$0</span></div>
+          <div class="cart-time" id="cart-time" style="display:none">
+            <i class="fa-regular fa-clock"></i><span id="cart-time-text"></span>
+          </div>
+          <div class="cart-row total"><span>Total</span><span id="total">$0</span></div>
+          <button class="btn btn-primary btn-block btn-lg" style="margin-top:4px" onclick="confirmarPedido()">
+            <i class="fa-solid fa-ticket"></i> Confirmar pedido
+          </button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- MODAL TURNO CONFIRMADO -->
+  <div class="modal-overlay" id="modal-turno">
+    <div class="modal" style="max-width:380px">
+      <div class="modal-body" style="padding:4px 0">
+        <div class="turno-confirm">
+          <div class="turno-ok-icon"><i class="fa-solid fa-check"></i></div>
+          <div>
+            <h3>Pedido confirmado</h3>
+            <p style="font-size:.85rem;margin-top:4px">Tu número de turno es:</p>
+          </div>
+          <div class="turno-big" id="turno-num-display">A-001</div>
+          <div class="turno-time" id="turno-time-display">
+            <i class="fa-regular fa-clock"></i> <span></span>
+          </div>
+          <p class="turno-note">Atención a la pantalla cuando llamen tu número.</p>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content:center">
+        <button class="btn btn-primary btn-lg" onclick="nuevoPedido()">
+          <i class="fa-solid fa-plus"></i> Nuevo pedido
+        </button>
       </div>
     </div>
-    <div class="modal-footer" style="justify-content:center">
-      <button class="btn btn-primary btn-lg" onclick="nuevoPedido()">
-        <i class="fa-solid fa-plus"></i> Nuevo pedido
-      </button>
-    </div>
   </div>
-</div>
 
-<div id="toast-container"></div>
+  <div id="toast-container"></div>
 
-<script src="js/store.js"></script>
-<script src="js/channel.js"></script>
-<script src="js/auth.js"></script>
-<script>
-Store.seedInicial();
-Auth.proteger('kiosco');
-document.getElementById('kiosco-user').textContent = Auth.getNombre();
+  <script src="js/store.js"></script>
+  <script src="js/channel.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    Store.seedInicial();
+    Auth.proteger('cliente');
+    document.getElementById('kiosco-user').textContent = Auth.getNombre();
 
-let carrito = [];
-let catActiva = 'todos';
+    let carrito = [];
+    let catActiva = 'todos';
 
-const catIconos = { todos:'fa-grip', combos:'fa-gift', hamburguesas:'fa-burger', 'acompañamientos':'fa-drumstick-bite', bebidas:'fa-mug-hot', postres:'fa-cake-candles' };
+    const catIconos = { todos: 'fa-grip', combos: 'fa-gift', hamburguesas: 'fa-burger', 'acompañamientos': 'fa-drumstick-bite', bebidas: 'fa-mug-hot', postres: 'fa-cake-candles' };
 
-function toast(msg, tipo = '') {
-  const el = Object.assign(document.createElement('div'), { className:`toast ${tipo}`, textContent: msg });
-  document.getElementById('toast-container').appendChild(el);
-  setTimeout(() => el.remove(), 2500);
-}
+    function toast(msg, tipo = '') {
+      const el = Object.assign(document.createElement('div'), { className: `toast ${tipo}`, textContent: msg });
+      document.getElementById('toast-container').appendChild(el);
+      setTimeout(() => el.remove(), 2500);
+    }
 
-// ─── CATEGORÍAS ───────────────────────────────────────
-function renderCategorias() {
-  const cats = ['todos', ...new Set(Store.getMenu().map(p => p.categoria))];
-  document.getElementById('cat-bar').innerHTML = cats.map(c => `
+    // ─── CATEGORÍAS ───────────────────────────────────────
+    function renderCategorias() {
+      const cats = ['todos', ...new Set(Store.getMenu().map(p => p.categoria))];
+      document.getElementById('cat-bar').innerHTML = cats.map(c => `
     <button class="cat-pill ${c === catActiva ? 'active' : ''}" onclick="setCat('${c}')">
       <i class="fa-solid ${catIconos[c] || 'fa-utensils'}"></i>
       ${c.charAt(0).toUpperCase() + c.slice(1)}
     </button>`).join('');
-}
+    }
 
-function setCat(cat) { catActiva = cat; renderCategorias(); renderProductos(); }
+    function setCat(cat) { catActiva = cat; renderCategorias(); renderProductos(); }
 
-// ─── PRODUCTOS ────────────────────────────────────────
-function renderProductos() {
-  const menu = Store.getMenu();
-  const lista = catActiva === 'todos' ? menu : menu.filter(p => p.categoria === catActiva);
-  document.getElementById('products-grid').innerHTML = lista.length === 0
-    ? `<p style="color:var(--muted);grid-column:1/-1;padding:30px 0">Sin productos en esta categoría</p>`
-    : lista.map(p => {
-        const agotado = !p.disponible || p.stock === 0;
-        return `
+    // ─── PRODUCTOS ────────────────────────────────────────
+    function renderProductos() {
+      const menu = Store.getMenu();
+      const lista = catActiva === 'todos' ? menu : menu.filter(p => p.categoria === catActiva);
+      document.getElementById('products-grid').innerHTML = lista.length === 0
+        ? `<p style="color:var(--muted);grid-column:1/-1;padding:30px 0">Sin productos en esta categoría</p>`
+        : lista.map(p => {
+          const agotado = !p.disponible || p.stock === 0;
+          return `
         <div class="product-card ${agotado ? 'sold-out' : ''}" onclick="${agotado ? '' : `agregarAlCarrito('${p.id}')`}">
           <div class="product-icon"><i class="fa-solid ${catIconos[p.categoria] || 'fa-utensils'}"></i></div>
           <div class="product-body">
@@ -134,8 +136,8 @@ function renderProductos() {
             <div class="product-footer">
               <span class="product-price">$${p.precio.toLocaleString()}</span>
               ${agotado
-                ? '<span class="product-sold">Sin stock</span>'
-                : `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+              ? '<span class="product-sold">Sin stock</span>'
+              : `<div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
                      <span class="product-time"><i class="fa-regular fa-clock"></i> ${p.tiempoEntrega} min</span>
                      <button class="add-btn" onclick="event.stopPropagation();agregarAlCarrito('${p.id}')">
                        <i class="fa-solid fa-plus" style="font-size:.75rem"></i>
@@ -144,48 +146,48 @@ function renderProductos() {
             </div>
           </div>
         </div>`;
-      }).join('');
-}
+        }).join('');
+    }
 
-// ─── CARRITO ─────────────────────────────────────────
-function agregarAlCarrito(id) {
-  const p = Store.getProducto(id);
-  if (!p || !p.disponible || p.stock === 0) return;
-  const item = carrito.find(i => i.productoId === id);
-  const cantActual = item ? item.cantidad : 0;
-  if (cantActual >= p.stock) { toast(`Stock máximo: ${p.stock}`, 'warning'); return; }
-  if (item) { item.cantidad++; item.subtotal = item.cantidad * p.precio; }
-  else carrito.push({ productoId:id, nombre:p.nombre, precio:p.precio, tiempoEntrega:p.tiempoEntrega, cantidad:1, subtotal:p.precio });
-  renderCarrito();
-  toast(`${p.nombre} agregado`, 'success');
-}
+    // ─── CARRITO ─────────────────────────────────────────
+    function agregarAlCarrito(id) {
+      const p = Store.getProducto(id);
+      if (!p || !p.disponible || p.stock === 0) return;
+      const item = carrito.find(i => i.productoId === id);
+      const cantActual = item ? item.cantidad : 0;
+      if (cantActual >= p.stock) { toast(`Stock máximo: ${p.stock}`, 'warning'); return; }
+      if (item) { item.cantidad++; item.subtotal = item.cantidad * p.precio; }
+      else carrito.push({ productoId: id, nombre: p.nombre, precio: p.precio, tiempoEntrega: p.tiempoEntrega, cantidad: 1, subtotal: p.precio });
+      renderCarrito();
+      toast(`${p.nombre} agregado`, 'success');
+    }
 
-function cambiarCantidad(id, delta) {
-  const idx = carrito.findIndex(i => i.productoId === id);
-  if (idx === -1) return;
-  carrito[idx].cantidad += delta;
-  if (carrito[idx].cantidad <= 0) carrito.splice(idx, 1);
-  else {
-    const maxStock = Store.getProducto(id)?.stock || 99;
-    if (carrito[idx].cantidad > maxStock) carrito[idx].cantidad = maxStock;
-    carrito[idx].subtotal = carrito[idx].cantidad * carrito[idx].precio;
-  }
-  renderCarrito();
-}
+    function cambiarCantidad(id, delta) {
+      const idx = carrito.findIndex(i => i.productoId === id);
+      if (idx === -1) return;
+      carrito[idx].cantidad += delta;
+      if (carrito[idx].cantidad <= 0) carrito.splice(idx, 1);
+      else {
+        const maxStock = Store.getProducto(id)?.stock || 99;
+        if (carrito[idx].cantidad > maxStock) carrito[idx].cantidad = maxStock;
+        carrito[idx].subtotal = carrito[idx].cantidad * carrito[idx].precio;
+      }
+      renderCarrito();
+    }
 
-function renderCarrito() {
-  const count = carrito.reduce((s, i) => s + i.cantidad, 0);
-  document.getElementById('cart-count').textContent = count;
+    function renderCarrito() {
+      const count = carrito.reduce((s, i) => s + i.cantidad, 0);
+      document.getElementById('cart-count').textContent = count;
 
-  const itemsEl = document.getElementById('cart-items');
-  if (carrito.length === 0) {
-    itemsEl.innerHTML = '<div class="cart-empty"><i class="fa-solid fa-basket-shopping"></i><p>Seleccioná productos del menú</p></div>';
-    ['subtotal','total'].forEach(id => document.getElementById(id).textContent = '$0');
-    document.getElementById('cart-time').style.display = 'none';
-    return;
-  }
+      const itemsEl = document.getElementById('cart-items');
+      if (carrito.length === 0) {
+        itemsEl.innerHTML = '<div class="cart-empty"><i class="fa-solid fa-basket-shopping"></i><p>Seleccioná productos del menú</p></div>';
+        ['subtotal', 'total'].forEach(id => document.getElementById(id).textContent = '$0');
+        document.getElementById('cart-time').style.display = 'none';
+        return;
+      }
 
-  itemsEl.innerHTML = carrito.map(item => `
+      itemsEl.innerHTML = carrito.map(item => `
     <div class="cart-item">
       <div class="cart-item-info">
         <div class="cart-item-name">${item.nombre}</div>
@@ -198,43 +200,44 @@ function renderCarrito() {
       </div>
     </div>`).join('');
 
-  const total = carrito.reduce((s, i) => s + i.subtotal, 0);
-  const tMax  = Math.max(...carrito.map(i => i.tiempoEntrega));
-  document.getElementById('subtotal').textContent  = `$${total.toLocaleString()}`;
-  document.getElementById('total').textContent     = `$${total.toLocaleString()}`;
-  const timeEl = document.getElementById('cart-time');
-  timeEl.style.display = 'flex';
-  document.getElementById('cart-time-text').textContent = `Tiempo estimado: ~${tMax} min`;
-}
+      const total = carrito.reduce((s, i) => s + i.subtotal, 0);
+      const tMax = Math.max(...carrito.map(i => i.tiempoEntrega));
+      document.getElementById('subtotal').textContent = `$${total.toLocaleString()}`;
+      document.getElementById('total').textContent = `$${total.toLocaleString()}`;
+      const timeEl = document.getElementById('cart-time');
+      timeEl.style.display = 'flex';
+      document.getElementById('cart-time-text').textContent = `Tiempo estimado: ~${tMax} min`;
+    }
 
-// ─── CONFIRMAR ────────────────────────────────────────
-function confirmarPedido() {
-  if (!carrito.length) { toast('El carrito está vacío', 'error'); return; }
-  for (const item of carrito) {
-    const p = Store.getProducto(item.productoId);
-    if (!p || p.stock < item.cantidad) { toast(`Sin stock: ${item.nombre}`, 'error'); renderProductos(); return; }
-  }
-  const total  = carrito.reduce((s, i) => s + i.subtotal, 0);
-  const tMax   = Math.max(...carrito.map(i => i.tiempoEntrega));
-  const pedido = Store.savePedido({ items: carrito.map(i => ({...i})), total, tiempoEstimado: tMax });
-  carrito.forEach(item => Store.actualizarStock(item.productoId, -item.cantidad));
-  Canal.emitir(EVENTOS.NUEVO_PEDIDO, pedido);
-  Canal.emitir(EVENTOS.STOCK_ACTUALIZADO, Store.getMenu());
-  document.getElementById('turno-num-display').textContent = pedido.turno;
-  document.querySelector('#turno-time-display span').textContent = `~${tMax} minutos`;
-  document.getElementById('modal-turno').classList.add('open');
-  carrito = []; renderCarrito(); renderProductos();
-}
+    // ─── CONFIRMAR ────────────────────────────────────────
+    function confirmarPedido() {
+      if (!carrito.length) { toast('El carrito está vacío', 'error'); return; }
+      for (const item of carrito) {
+        const p = Store.getProducto(item.productoId);
+        if (!p || p.stock < item.cantidad) { toast(`Sin stock: ${item.nombre}`, 'error'); renderProductos(); return; }
+      }
+      const total = carrito.reduce((s, i) => s + i.subtotal, 0);
+      const tMax = Math.max(...carrito.map(i => i.tiempoEntrega));
+      const pedido = Store.savePedido({ items: carrito.map(i => ({ ...i })), total, tiempoEstimado: tMax });
+      carrito.forEach(item => Store.actualizarStock(item.productoId, -item.cantidad));
+      Canal.emitir(EVENTOS.NUEVO_PEDIDO, pedido);
+      Canal.emitir(EVENTOS.STOCK_ACTUALIZADO, Store.getMenu());
+      document.getElementById('turno-num-display').textContent = pedido.turno;
+      document.querySelector('#turno-time-display span').textContent = `~${tMax} minutos`;
+      document.getElementById('modal-turno').classList.add('open');
+      carrito = []; renderCarrito(); renderProductos();
+    }
 
-function nuevoPedido() { document.getElementById('modal-turno').classList.remove('open'); }
+    function nuevoPedido() { document.getElementById('modal-turno').classList.remove('open'); }
 
-// ─── BROADCAST ────────────────────────────────────────
-Canal.escuchar(EVENTOS.MENU_ACTUALIZADO, () => { renderCategorias(); renderProductos(); });
-Canal.escuchar(EVENTOS.STOCK_ACTUALIZADO, () => renderProductos());
+    // ─── BROADCAST ────────────────────────────────────────
+    Canal.escuchar(EVENTOS.MENU_ACTUALIZADO, () => { renderCategorias(); renderProductos(); });
+    Canal.escuchar(EVENTOS.STOCK_ACTUALIZADO, () => renderProductos());
 
-// ─── INIT ─────────────────────────────────────────────
-renderCategorias();
-renderProductos();
-</script>
+    // ─── INIT ─────────────────────────────────────────────
+    renderCategorias();
+    renderProductos();
+  </script>
 </body>
+
 </html>

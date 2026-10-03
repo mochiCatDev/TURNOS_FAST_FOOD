@@ -89,12 +89,6 @@
           </button>
         </div>
       </form>
-
-      <div class="login-hint">
-        <strong>Credenciales de prueba</strong>
-        <span>Admin: <code>admin</code> / <code>admin123</code></span>
-        <span>Kiosco: <code>kiosco</code> / <code>kiosco123</code></span>
-      </div>
     </div>
   </div>
 
@@ -103,11 +97,9 @@
   <script>
     Store.seedInicial();
 
-    // Si ya hay sesión iniciada, redirige
     const s = Auth.getSesion();
     if (s) window.location.href = s.rol === 'admin' ? 'admin.html' : 'kiosco.html';
 
-    // Estado del formulario: 'login' o 'register'
     let modoActual = 'login';
 
     const formTitle = document.getElementById('form-title');
@@ -118,7 +110,6 @@
     const btnText = document.getElementById('btn-text');
     const btnToggle = document.getElementById('btn-toggle-mode');
 
-    // Función para mostrar mensajes en la cajita
     function mostrarNotificacion(mensaje, tipo = 'error') {
       alertBox.style.display = 'block';
       alertBox.textContent = mensaje;
@@ -142,13 +133,12 @@
       alertBox.style.display = 'none';
     }
 
-    // Alternar entre Login y Registro
     btnToggle.addEventListener('click', () => {
       ocultarNotificacion();
       if (modoActual === 'login') {
         modoActual = 'register';
         formTitle.textContent = 'Crear cuenta';
-        formSub.textContent = 'Registrate para acceder al kiosco';
+        formSub.textContent = 'Registrate para ingresar al sistema de pedidos';
         groupNombre.style.display = 'block';
         inputNombre.required = true;
         btnText.textContent = 'Registrarse';
@@ -164,7 +154,6 @@
       }
     });
 
-    // Procesar Formulario
     document.getElementById('form-login').addEventListener('submit', e => {
       e.preventDefault();
       ocultarNotificacion();
@@ -174,7 +163,6 @@
       const nom = inputNombre.value.trim();
 
       if (modoActual === 'login') {
-        // 1. Verificar si el usuario existe antes de validar credenciales
         const existe = Store.existeUsuario(u);
 
         if (!existe) {
@@ -182,7 +170,6 @@
           return;
         }
 
-        // 2. Intentar login
         const user = Auth.login(u, p);
         if (!user) {
           mostrarNotificacion('Contraseña incorrecta. Intente de nuevo.', 'error');
@@ -192,13 +179,12 @@
         window.location.href = user.rol === 'admin' ? 'admin.html' : 'kiosco.html';
 
       } else {
-        // Modo Registro
         if (!nom) {
           mostrarNotificacion('Por favor, ingrese su nombre.', 'error');
           return;
         }
 
-        const res = Auth.registrar(nom, u, p, 'kiosco');
+        const res = Auth.registrar(nom, u, p, 'cliente');
 
         if (!res.ok) {
           mostrarNotificacion(res.msg, 'warning');

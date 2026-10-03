@@ -103,7 +103,6 @@ const Store = (() => {
     if (!get(K.USUARIOS)) {
       set(K.USUARIOS, [
         { id: '1', nombre: 'Administrador', usuario: 'admin', password: 'admin123', rol: 'admin' },
-        { id: '2', nombre: 'Kiosco 1',      usuario: 'kiosco', password: 'kiosco123', rol: 'kiosco' }
       ]);
     }
     if (!get(K.MENU)) {
