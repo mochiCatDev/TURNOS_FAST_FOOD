@@ -110,6 +110,22 @@
 <script src="js/store.js"></script>
 <script src="js/channel.js"></script>
 <script>
+function beep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [523.25, 659.25, 783.99].forEach((freq, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.frequency.value = freq; o.type = 'sine';
+      const t = ctx.currentTime + i * .18;
+      g.gain.setValueAtTime(.32, t);
+      g.gain.exponentialRampToValueAtTime(.001, t + .38);
+      o.start(t); o.stop(t + .38);
+    });
+  } catch(e) {}
+}
+
+
 /* ============================================================
    Estado de la pantalla
    ============================================================ */
@@ -204,30 +220,11 @@ function actualizarCola(datos) {
 }
 
 /* ============================================================
-   AUDIO — beep al llamar turno
-   ============================================================ */
-function beep() {
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [523.25, 659.25, 783.99].forEach((freq, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.frequency.value = freq; o.type = 'sine';
-      const t = ctx.currentTime + i * .18;
-      g.gain.setValueAtTime(.32, t);
-      g.gain.exponentialRampToValueAtTime(.001, t + .38);
-      o.start(t); o.stop(t + .38);
-    });
-  } catch (e) { /* silencioso si no hay AudioContext */ }
-}
-
-/* ============================================================
    RENDERIZAR TURNO LLAMADO
    ============================================================ */
 function mostrarTurno(numero, texto) {
   DISPLAY.turnoActual = numero;
 
-  beep();
   const el = document.getElementById('numBig');
   el.textContent = numero;
   el.classList.remove('number-animate');
@@ -315,5 +312,6 @@ function capitalizar(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 </script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v31edd6df95cf4e85bb4c19e7a9bdbcba1788362987495" integrity="sha512-iIg7k2xntmwu6/uSb5tpc/hySgZc4eoL31yB29W6tJFo2akwjPWcEqnCEdJvGexCL0KEQwVYv5BlowfhVz26hg==" data-cf-beacon='{"version":"2024.11.0","token":"f0f03d0605bf45f1a3b17cf7d5e6861f","spa":2}' crossorigin="anonymous"></script>
 </body>
 </html>
